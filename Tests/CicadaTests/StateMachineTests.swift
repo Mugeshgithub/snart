@@ -24,8 +24,8 @@ import Testing
 
 @Suite struct LanguageDetectionTests {
     let english = sourceLanguages.first { $0.code == "en" }!
-    let zh = sourceLanguages.first { $0.code == "zh-CN" }!
-    let ja = sourceLanguages.first { $0.code == "ja" }!
+    let zh = Lang(name: "Chinese", locale: "zh-CN", code: "zh-CN")
+    let ja = Lang(name: "Japanese", locale: "ja-JP", code: "ja")
 
     func c(_ lang: Lang, _ score: Double, chars: Int = 30) -> LanguageDetector.Candidate {
         .init(lang: lang, confidence: score, chars: chars, text: "", score: score)

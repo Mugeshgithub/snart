@@ -11,27 +11,15 @@ struct Lang: Equatable {
     let code: String
 }
 
+// Cognivex Interpreter hears and speaks English and French only: every language menu offers these two.
 let sourceLanguages: [Lang] = [
     .init(name: "English", locale: "en-US", code: "en"),
-    .init(name: "日本語", locale: "ja-JP", code: "ja"),
-    .init(name: "中文", locale: "zh-CN", code: "zh-CN"),
-    .init(name: "한국어", locale: "ko-KR", code: "ko"),
-    .init(name: "Español", locale: "es-ES", code: "es"),
-    .init(name: "Français", locale: "fr-FR", code: "fr"),
-    .init(name: "Deutsch", locale: "de-DE", code: "de"),
-    .init(name: "Português", locale: "pt-BR", code: "pt"),
+    .init(name: "French", locale: "fr-FR", code: "fr"),
 ]
 
 let targetLanguages: [Lang] = [
-    .init(name: "简体中文", locale: "zh-Hans", code: "zh-CN"),
-    .init(name: "繁體中文", locale: "zh-Hant", code: "zh-TW"),
     .init(name: "English", locale: "en", code: "en"),
-    .init(name: "日本語", locale: "ja", code: "ja"),
-    .init(name: "한국어", locale: "ko", code: "ko"),
-    .init(name: "Español", locale: "es", code: "es"),
-    .init(name: "Français", locale: "fr", code: "fr"),
-    .init(name: "Deutsch", locale: "de", code: "de"),
-    .init(name: "Português", locale: "pt", code: "pt"),
+    .init(name: "French", locale: "fr", code: "fr"),
 ]
 
 /// Maps a system language identifier ("zh-Hans-CA", "en-CA", "zh-TW") to a translation code.
@@ -50,16 +38,15 @@ func translationCode(forSystemLanguage id: String) -> String {
 /// app speaks Chinese), otherwise the first system language. Subtitles, notes and speak-back
 /// all start from this one answer, so they never disagree.
 func myLanguage(systemLanguages prefs: [String]) -> String {
-    translationCode(forSystemLanguage: prefs.first { $0.hasPrefix("zh") } ?? prefs.first ?? "zh-Hans")
+    // Cognivex Interpreter: the reader's language is English, whatever the Mac lists.
+    "en"
 }
 
 /// What "follow system" translates into: my language, unless that is what they speak; then the
 /// next system language, or between Chinese and English when the system has only one.
 func followSystemTarget(source: String?, systemLanguages prefs: [String]) -> String {
-    let mine = myLanguage(systemLanguages: prefs)
-    guard let source, source == mine else { return mine }
-    return prefs.map(translationCode(forSystemLanguage:)).first { $0 != mine }
-        ?? (mine.hasPrefix("zh") ? "en" : "zh-CN")
+    // English and French only: English heard is shown in French, everything else in English.
+    source == "en" ? "fr" : "en"
 }
 
 /// The languages "auto" most likely hears, most likely first: the last one detected, the Mac's

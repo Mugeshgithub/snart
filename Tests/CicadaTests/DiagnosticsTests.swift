@@ -56,9 +56,9 @@ import Testing
 
     @Test func retreatsCountSentencesTheServiceGaveUpOn() {
         let d = diag()
-        d.record(sentence("them", via: "zenmux"))
-        d.record(sentence("them", via: "google", fallbacks: ["zenmux:rateLimited"]))
-        d.record(sentence("them", via: "google", fallbacks: ["zenmux:timeout"]))
+        d.record(sentence("them", via: "openrouter"))
+        d.record(sentence("them", via: "google", fallbacks: ["openrouter:rateLimited"]))
+        d.record(sentence("them", via: "google", fallbacks: ["openrouter:timeout"]))
         d.record(sentence("them", via: "apple", fallbacks: ["google:rateLimited"]))   // Google's fallback, not the service's
         #expect(d.retreats.map(\.0) == ["google"])
         #expect(d.retreats.first?.1 == 2)

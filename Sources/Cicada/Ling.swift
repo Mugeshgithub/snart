@@ -350,7 +350,7 @@ final class LingClient: ObservableObject {
                 r.pass(upTo: .key, seconds: Date().timeIntervalSince(started))
                 let credits = try? await get("credits", key: key)
                 r.balance = AICheck.balance(key: info, credits: credits)
-            case .openai:
+            case .openai, .anthropic:
                 _ = try await get("models", key: key)
                 r.pass(upTo: .key, seconds: Date().timeIntervalSince(started))
             case .zenmux:
@@ -962,13 +962,16 @@ final class LingClient: ObservableObject {
     private func post(_ path: String, body: [String: Any], base: URL? = nil, key: String, timeout: TimeInterval,
                       notes: Bool = false) async throws -> [String: Any] {
         guard let base = base ?? config().base else { throw Failure.noKey }
-        var req = URLRequest(url: base.appendingPathComponent(path))
+        // Claude speaks the Messages API, not chat completions: the request and its answer are
+        // converted here, so every caller keeps one shape.
+        let claude = Anthropic.serves(base) && path == "chat/completions"
+        var req = URLRequest(url: base.appendingPathComponent(claude ? "messages" : path))
         req.httpMethod = "POST"
         req.timeoutInterval = timeout
-        req.httpBody = try JSONSerialization.data(withJSONObject: body)
+        req.httpBody = try JSONSerialization.data(withJSONObject: claude ? Anthropic.messages(from: body) : body)
         let data = try await send(req, key: key, notes: notes)
         guard let root = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { throw Failure.parse }
-        return root
+        return claude ? try Anthropic.completion(from: root) : root
     }
 
     private func get(_ path: String, key: String) async throws -> [String: Any] {
@@ -986,7 +989,11 @@ final class LingClient: ObservableObject {
     private func send(_ request: URLRequest, key: String, contentType: String? = "application/json",
                       notes: Bool = false) async throws -> Data {
         var req = request
-        if !key.isEmpty { req.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization") }
+        if Anthropic.serves(req.url) {
+            req.setValue(key, forHTTPHeaderField: "x-api-key")
+            req.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+            if let beta = Anthropic.beta(for: req) { req.setValue(beta, forHTTPHeaderField: "anthropic-beta") }
+        } else if !key.isEmpty { req.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization") }
         if let contentType { req.setValue(contentType, forHTTPHeaderField: "Content-Type") }
         let data: Data
         let response: URLResponse

@@ -51,10 +51,12 @@
 "更快、更省" = "Faster, cheaper";
 "女" = "Female";
 "男" = "Male";
-"和 Ling 同款" = "Same as Ling";
-"中文好" = "Great at Chinese";
+"最准" = "Most accurate";
+"最快、最省" = "Fastest, cheapest";
 "效果和价格最均衡" = "Best balance of quality and price";
 "更省" = "Cheaper";
+"和 Ling 同款" = "Same as Ling";
+"中文好" = "Great at Chinese";
 "够用、更省" = "Good enough, cheaper";
 "自定义服务" = "Custom service";
 
@@ -84,14 +86,14 @@
 "已关" = "Off";
 "随翻译一起发，几乎不多花" = "Sent with the translation, barely any extra cost";
 "在“词表”里打开" = "Turn on in Word list";
-"同传声音" = "Interpreting voice";
-"本机" = "On-device";
 "你自己的声音" = "Your own voice";
-"录一段，让对方听到你的音色" = "Record a sample so others hear your voice";
-"只有 Ling" = "Ling only";
-"换用 Ling 才有" = "Switch to Ling to use";
+"本机" = "On-device";
+"对方听到法语，用你的声音" = "They hear French in your voice";
+"在“声音”里填好 ElevenLabs" = "Set up ElevenLabs under Voice";
 "语音识别" = "Speech recognition";
 "识别和翻译一步完成" = "Transcribed and translated in one step";
+"只有 Ling" = "Ling only";
+"换用 Ling 才有" = "Switch to Ling to use";
 "更快，不花钱" = "Faster, and free";
 "自己选模型" = "Choose models yourself";
 "模型" = "Model";
@@ -113,6 +115,7 @@
 "纪要写不了" = "Can't write notes";
 "翻译和纪要" = "Translation and notes";
 "没填，用本机声音" = "Not set: the Mac's voice";
+"同传声音" = "Interpreting voice";
 "不用 Google 翻译；说话时要等整句说完才出译文" = "No Google Translate; translation appears after each sentence ends";
 "现在连不上：整句先用本机翻译，半句只显示原文" = "Unreachable: full sentences translate on-device; partial lines show the original";
 "现在连不上：新字幕暂时只有原文" = "Unreachable: new subtitles show the original only for now";
@@ -202,7 +205,6 @@
 /* AboutPanel */
 "把 Mac 正在播放的声音变成实时双语字幕和会议纪要" = "Live bilingual subtitles and meeting notes from whatever your Mac is playing";
 "网站" = "Website";
-"反馈问题" = "Report an Issue";
 "声纹模型：WeSpeaker ResNet34-LM（VoxCeleb），CC BY 4.0" = "Voiceprint model: WeSpeaker ResNet34-LM (VoxCeleb), CC BY 4.0";
 
 /* AppMenu */
@@ -1330,7 +1332,6 @@
 "收起原话" = "Hide original";
 "在纪要旁显示原话" = "Show the original beside the notes";
 "用保存的录音重新识别，替换现在的文字记录和纪要；旧记录会先备份" = "Recognize the saved recording again and replace the transcript and notes; the old record is backed up first";
-"分享…" = "Share…";
 "复制全文" = "Copy Everything";
 "导出 Markdown…" = "Export Markdown…";
 "导出 Word…" = "Export Word…";
@@ -1502,174 +1503,3 @@
 "新增 %lld · 补充听成 %lld · 跳过 %lld" = "%lld new · %lld updated · %lld skipped";
 "第 %@ 行没加进去：超过 40 个字" = "Line %@ not added: over 40 characters";
 "导入 %lld 个" = "Import %lld";
-
-/* AIServicePage */
-"地址要用 https；这台手机和局域网里的服务可以用 http。" = "The address must use https; services on this phone or your local network can use http.";
-"Key（局域网里的服务可以不填）" = "Key (optional for a service on your local network)";
-"%@ 的 key" = "%@ key";
-"不用 key" = "No key needed";
-
-/* CicadaApp */
-"已暂停，结束后接着听" = "Paused; resumes when it's over";
-"正在听外放…" = "Listening to the speaker…";
-
-/* Export */
-"存成文件" = "Save as a file";
-"分享和导出" = "Share and export";
-"分享" = "Share";
-"SRT 字幕" = "SRT Subtitles";
-"文字记录和纪要" = "Transcript and notes";
-"直接发给同事" = "Ready to send to colleagues";
-"配原声或视频" = "For the recording or video";
-
-/* FaceToFace */
-"请在设置里允许知了使用麦克风" = "Allow Cognivex to use the microphone in Settings";
-"没听清，按住再说一次" = "Didn't catch that. Hold and say it again";
-"连不上翻译，填 Ling key 后不用代理也能用" = "Can't reach translation. With a Ling key it works without a proxy";
-"网络连不上，连上后再说一次" = "No connection. Say it again once you're online";
-"没翻译出来，再说一次" = "Couldn't translate that. Say it again";
-
-/* FaceView */
-"不用按键 · 说完停一下就翻译，念完轮到对方" = "Hands-free · pause to translate; then it's their turn";
-"我说和对方说" = "My language and theirs";
-"正在听你说" = "Listening to you";
-"请说…" = "Speak now…";
-"正在念给对方" = "Reading it out";
-"按住下面的按钮说话" = "Hold the button below and speak";
-"松开就念给对方" = "Let go to read it out";
-"对方在说话" = "They're speaking";
-"在听你说 · 停一下就翻译" = "Listening · pause and it translates";
-"轮到你时点这里" = "Tap here when it's your turn";
-"面对面同声传译" = "Face-to-Face Interpreting";
-"面对面" = "Face to Face";
-"手机念给对方听" = "The phone reads it aloud";
-
-/* FixViews */
-"最多 %lld 个，满了优先用最近的。只存在这台设备上" = "Up to %lld, recent ones first. Stored only on this device";
-
-/* FolderPage */
-"在“文件”里选一次文件夹：iCloud 云盘、Obsidian 库，或其他支持“文件”的 app。" = "Pick a folder once in Files: iCloud Drive, an Obsidian vault, or any app that works with Files.";
-"换个文件夹后自动补存" = "Pick another folder and the missed ones are saved";
-
-/* Importing */
-"只能导入录音或带声音的视频" = "Only recordings or videos with sound can be imported";
-"正在导入" = "Importing";
-"导入录音或视频" = "Import a Recording or Video";
-"从文件导入" = "Import from Files";
-"从相册导入视频" = "Import Video from Photos";
-"这个视频读不出来" = "This video can't be read";
-"切到别的 app 也会继续" = "Keeps going in other apps";
-"还有 %lld 个文件在排队" = "%lld more files waiting";
-"连不上翻译，%lld 句等连上后再翻" = "Can't reach translation · %lld lines wait for the connection";
-"停止" = "Stop";
-
-/* Intents */
-"用麦克风听会议室，出实时双语字幕和纪要" = "Listen to the room with the microphone for live bilingual subtitles and notes";
-"结束并出纪要" = "End and Make Notes";
-"结束正在听的会议，有 key 时整理纪要" = "Ends the meeting being listened to and writes its notes when there is a key";
-"暂停或继续听" = "Pause or Resume Listening";
-
-/* LiveViews */
-"外放 · %@" = "Speaker · %@";
-"会议室 · %@" = "Room · %@";
-"正在听 · %@" = "Listening · %@";
-"对方说和翻译成" = "They speak, and translate into";
-"别戴耳机，字幕会浮在小窗里" = "No headphones; subtitles float in a small window";
-"听不到其他 app 的声音，线上会议请用电脑版" = "Can't hear other apps; use a computer for online meetings";
-"手机外放" = "Phone speaker";
-"声音来源" = "Audio source";
-"外放" = "Speaker";
-"%lld 人在说" = "%lld people talking";
-"纪要 · %lld 条新" = "Notes · %lld new";
-"点开看字幕" = "Tap for subtitles";
-"刚才" = "Just now";
-"开始说话后，字幕会出现在这里" = "Subtitles show up here once people start talking";
-
-/* NotesEdit */
-"改这一条" = "Edit this";
-"已复制纪要，贴进飞书、钉钉、Notion 就是排好的" = "Notes copied. Paste into Feishu, DingTalk or Notion and they keep their formatting";
-
-/* PeoplePage */
-"声纹只保存在这台手机；可以写备注，也可以删除。" = "Voiceprints stay only on this phone. Add notes or delete them here.";
-
-/* PiPSubtitles */
-"知了 · 正在听" = "Cognivex · Listening";
-
-/* RecordView */
-"只看 %@ · %lld 段 · 再点一下取消" = "Only %@ · %lld turns · tap again to clear";
-"只看这个人；按住可改名字，或和别人合并" = "Shows only this person; press and hold to rename or merge";
-"改名字" = "Rename";
-"请先确认对方知道。声纹只保存在这台手机，用于以后会议认出这个人，可随时在人员库里删除。" = "Make sure they know first. The voiceprint stays only on this phone, is used to recognize this person in later meetings, and can be deleted from People anytime.";
-"播放进度" = "Playback position";
-
-/* RecordsView */
-"%lld 人" = "%lld people";
-
-/* RoomListen */
-"正在准备…" = "Getting ready…";
-"继续听" = "Listening again";
-"没听到声音，请拔掉耳机或调大音量" = "No sound; unplug headphones or turn it up";
-"识别中断了，请重新开始听" = "Recognition stopped. Start listening again";
-
-/* RootView */
-"下一版就能用" = "Coming in the next version";
-
-/* SettingsView */
-"快速开始" = "Quick Start";
-"只存在这台手机上，会议记录里能回放原声" = "Kept on this phone only. Play it back in the record.";
-"我的语言" = "Mine";
-"念给对方的声音" = "Voice for the Other Person";
-"操作按钮、控制中心和 Siri" = "Action Button, Control Center and Siri";
-"手机自带" = "Built-in";
-"在 Ling 开放平台点“创建令牌”，复制以 sk- 开头的那串。" = "On the Ling platform, click “Create token” and copy the string that starts with sk-.";
-"打开 Ling 开放平台 ↗" = "Open the Ling platform ↗";
-"Ling 提示此令牌无效，请检查是否复制完整，或重新创建一个" = "Ling says this token is invalid. Check that you copied all of it, or create a new one";
-"不用先打开 app 就开始听，再按一次结束" = "Start listening without opening the app; press again to end";
-"都按上次的语言听" = "Each uses the last languages you listened in";
-"操作按钮" = "Action Button";
-"控制中心和锁屏" = "Control Center and Lock Screen";
-"按一下开始听" = "Press Once to Listen";
-"iPhone 设置 › 操作按钮 › 快捷指令 › %@“开始听”" = "iPhone Settings › Action Button › Shortcut › %@ “Start Listening”";
-"打开 iPhone 设置" = "Open iPhone Settings";
-"“开始听”按钮" = "“Start Listening” Button";
-"下拉控制中心，点左上角的 + 添加" = "Pull down Control Center and tap + at the top left to add it";
-"“嘿 Siri，用%@开始听”" = "“Hey Siri, start listening with %@”";
-"“嘿 Siri，%@结束”" = "“Hey Siri, stop %@”";
-
-/* ShareCard */
-"分享链接" = "Share link";
-"生成链接" = "Create link";
-"复制链接" = "Copy link";
-
-/* VoicesPage */
-"Ling 不可用时自动换成手机的声音" = "Falls back to the phone's voice when Ling is unavailable";
-"听起来不像或有杂音？换个安静的地方重录一次。录音只存在这台手机上，可随时删除。" = "Doesn't sound like you, or noisy? Record again somewhere quiet. The recording stays on this phone and can be deleted anytime.";
-
-/* Welcome */
-"第 %lld 步，共 3 步" = "Step %lld of 3";
-"听会议室" = "Listen to the Room";
-"用麦克风听，实时双语字幕和纪要" = "Listens with the microphone: live bilingual subtitles and notes";
-"听会议室里的人说话" = "Hears the people in the room";
-"%@语音模型" = "%@ Speech Model";
-"在手机上把声音转成文字" = "Turns speech into text on this phone";
-"已就绪" = "Ready";
-"下载" = "Download";
-"线上会议里的声音请用电脑版" = "For online meetings, use the Mac app";
-"手机放出来，知了用麦克风听" = "The phone plays it, Cognivex listens with the microphone";
-"播放示例" = "Play Sample";
-"放完了" = "Finished";
-"约 %lld 秒" = "About %lld s";
-"示例会议" = "Sample meeting";
-"按 ▶ 开始，字幕会出现在这里" = "Press ▶ and subtitles appear here";
-"没出字？把音量调大，手机别盖住" = "No text? Turn the volume up and keep the phone uncovered";
-"跳过" = "Skip";
-"听到了，继续" = "Heard It, Continue";
-"key 只存在这台手机上，不进备份" = "The key stays on this phone and out of backups";
-"纪要、改错和同声传译要用；不填也能看字幕" = "Needed for notes, fixes and interpreting; subtitles work without it";
-"填入 Ling key" = "Add a Ling Key";
-"没有 key？去 Ling 拿一个" = "No key? Get one from Ling";
-"开始用知了" = "Start Using Cognivex";
-"以后再填" = "Later";
-
-/* Only the ports: Android */
-"复制为 Markdown" = "Copy as Markdown";

@@ -22,9 +22,8 @@ cp Resources/Info.plist "$APP/Contents/Info.plist"
 cp Resources/sample/sample.m4a "$APP/Contents/Resources/"
 # The experimental voiceprint model; the app compiles it on first use (no coremlcompiler in the CLT).
 cp -R Resources/models/SpeakerEmbedding.mlpackage "$APP/Contents/Resources/"
-cp -R Resources/*.lproj "$APP/Contents/Resources/"
-# Traditional Chinese systems get the Chinese UI rather than English (there is no zh-Hant translation).
-cp -R Resources/zh-Hans.lproj "$APP/Contents/Resources/zh-Hant.lproj"
+# English only, whatever languages the Mac lists.
+cp -R Resources/en.lproj "$APP/Contents/Resources/"
 
 PLIST="$APP/Contents/Info.plist"
 # One version for every platform, in VERSION at the repo root (the committed Info.plist value is unused).

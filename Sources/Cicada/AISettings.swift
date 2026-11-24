@@ -596,6 +596,7 @@ struct AISettingsView: View {
     private var keyPlaceholder: String {
         switch provider.id {
         case .openrouter: "sk-or-…"
+        case .anthropic: "sk-ant-…"
         case .custom: AIProvider.isNearby(baseDraft) ? L("本机和局域网服务可不填") : "sk-…"
         default: "sk-…"
         }
@@ -740,14 +741,10 @@ struct AISettingsView: View {
                      style: fixOn ? .ok : .off,
                      note: fixOn ? L("随翻译一起发，几乎不多花") : textOn ? L("在“词表”里打开") : later)
         }
-        let speaks = ling.speaks && !down
-        usageRow(L("同传声音"), tag: speaks ? uses : L("本机"), style: speaks ? .ok : .off, note: voiceNote(down: down))
-        if provider.clones {
-            usageRow(L("你自己的声音"), tag: on ? uses : ling.hasKey ? L("暂不可用") : L("需要 key"), style: on ? .ok : .off,
-                     note: on ? L("录一段，让对方听到你的音色") : later)
-        } else {
-            usageRow(L("你自己的声音"), tag: L("只有 Ling"), style: .ling, note: L("换用 Ling 才有"))
-        }
+        // The voice is ElevenLabs' (Settings › Voice), whichever service does the text.
+        let eleven = ElevenLabs.configured
+        usageRow(L("你自己的声音"), tag: eleven ? "ElevenLabs" : L("本机"), style: eleven ? .ok : .off,
+                 note: eleven ? L("对方听到法语，用你的声音") : L("在“声音”里填好 ElevenLabs"))
         if Recognition.cloudOnly {
             if provider.hearsAudio {
                 usageRow(L("语音识别"), tag: on ? uses : ling.hasKey ? L("暂不可用") : L("需要 key"), style: on ? .ok : .off,

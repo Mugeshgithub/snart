@@ -10,7 +10,7 @@ import Foundation
 /// TTS arena). `inclusionai/ling-*` is Ling itself on the aggregators, so the prompts carry over.
 struct AIProvider: Identifiable, Equatable {
     enum Kind: String, CaseIterable, Identifiable {
-        case ling, openrouter, zenmux, openai, custom
+        case ling, openrouter, zenmux, openai, custom, anthropic
         var id: String { rawValue }
     }
 
@@ -50,11 +50,18 @@ struct AIProvider: Identifiable, Equatable {
         CloudVoice(id: "Charon", gender: L("男")), CloudVoice(id: "Puck", gender: L("男")),
     ]
 
+    /// Claude through Anthropic's own Messages API (`LingClient` converts the chat requests).
+    static let anthropic = AIProvider(
+        id: .anthropic, name: "Anthropic", base: URL(string: "https://api.anthropic.com/v1/"),
+        site: URL(string: "https://console.anthropic.com/settings/keys"),
+        textModels: [Model(id: "claude-opus-5-5", note: L("最准")), Model(id: "claude-haiku-5-5", note: L("最快、最省"))],
+        voiceModels: [], voices: [], clones: false, hearsAudio: false, spacing: 0.1)
+
     static let openrouter = AIProvider(
         id: .openrouter, name: "OpenRouter", base: URL(string: "https://openrouter.ai/api/v1/"),
         site: URL(string: "https://openrouter.ai/settings/keys"),
-        textModels: [Model(id: "inclusionai/ling-3.1-flash", note: L("和 Ling 同款")),
-                     Model(id: "qwen/qwen3.8-flash", note: L("中文好"))],
+        textModels: [Model(id: "anthropic/claude-opus-5.5", note: L("最准")),
+                     Model(id: "anthropic/claude-haiku-5.5", note: L("最快、最省"))],
         voiceModels: [Model(id: "google/gemini-3.8-flash-tts", note: L("效果和价格最均衡")),
                       Model(id: "google/gemini-3.8-flash-lite-tts", note: L("更省"))],
         voices: gemini, clones: false, hearsAudio: false, spacing: 0.1)
@@ -81,9 +88,10 @@ struct AIProvider: Identifiable, Equatable {
         id: .custom, name: L("自定义服务"), base: nil, site: nil,
         textModels: [], voiceModels: [], voices: [], clones: false, hearsAudio: false, spacing: 0.1)
 
-    static let all: [AIProvider] = [.ling, .openrouter, .zenmux, .openai, .custom]
+    /// The menu: Ling and ZenMux stay in the code, not offered.
+    static let all: [AIProvider] = [.anthropic, .openai, .openrouter, .custom]
 
-    static func named(_ raw: String) -> AIProvider { all.first { $0.id.rawValue == raw } ?? .ling }
+    static func named(_ raw: String) -> AIProvider { all.first { $0.id.rawValue == raw } ?? .openrouter }
 
     /// http only on this Mac or the local network (Ollama, LM Studio, a GPU box at home or work, a
     /// Tailscale address); anything else must be https.
@@ -194,8 +202,15 @@ struct AIConfig: Equatable {
             body["thinking"] = ["type": "disabled"]
         case .openrouter, .zenmux:
             body["max_tokens"] = maxTokens
-            body["temperature"] = 0.2
-            body["reasoning"] = ["enabled": false]
+            if (body["model"] as? String)?.hasPrefix("anthropic/") == true {
+                // Current Claude models refuse sampling settings and can't turn thinking off: least effort instead.
+                body["reasoning"] = ["effort": "low"]
+            } else {
+                body["temperature"] = 0.2
+                body["reasoning"] = ["enabled": false]
+            }
+        case .anthropic:
+            body["max_tokens"] = maxTokens
         case .openai:
             body["max_completion_tokens"] = maxTokens
             body["reasoning_effort"] = "none"

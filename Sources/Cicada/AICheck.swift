@@ -180,6 +180,7 @@ struct AICheck: Equatable {
     static func owner(ofKey key: String) -> (service: AIProvider.Kind, management: Bool)? {
         let k = key.trimmingCharacters(in: .whitespacesAndNewlines)
         if k.hasPrefix("sk-or-") { return (.openrouter, false) }
+        if k.hasPrefix("sk-ant-") { return (.anthropic, false) }
         if k.hasPrefix("sk-payg") { return (.zenmux, false) }
         if k.hasPrefix("sk-mgmt") { return (.zenmux, true) }
         return nil
