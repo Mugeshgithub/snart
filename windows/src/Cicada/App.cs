@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 using System.IO.Pipes;
 using System.Media;
 using System.Text.Json.Nodes;
@@ -55,6 +57,7 @@ sealed class Controller
     public readonly SessionStore Store = new();
     public readonly NotesEngine Notes;
     public readonly Translator Translator;
+    public readonly ElevenLabsClient Eleven;
     public readonly ListenEngine Listen;
     public readonly SpeakEngine Speak;
     public readonly WindowsVoice WindowsVoice = new();
@@ -131,13 +134,17 @@ sealed class Controller
         Ling.Changed += Changed;
         SpeakerLabels.Voices = Settings.SpeakerVoices;
         Notes = new NotesEngine(Ling, Store);
-        Translator = new Translator(Ling) { GoogleOff = Settings.GoogleOff };
+        // Snart: ElevenLabs hears every stretch and speaks in the user's clone; the pair pins
+        // what the other side speaks.
+        Eleven = new ElevenLabsClient(() => Key.Read(ElevenLabsClient.Service), () => Settings.ElevenVoice);
+        Translator = new Translator(Ling) { GoogleOff = Settings.GoogleOff, Eleven = Eleven };
         Translator.Changed += Changed;
-        Listen = new ListenEngine(Ling, Translator, Store, Notes, Settings);
+        Listen = new ListenEngine(Ling, Translator, Store, Notes, Settings) { Pinned = () => Settings.Theirs };
         Speak = new SpeakEngine(Ling, Translator, Store, Settings, () => Listen.Spoken,
             () => Listen.Listening && Listen.SessionId is { } id && Store.Get(id) is { } s ? (id, s.StartedAt) : null, WindowsVoice);
         Speak.Changed += () => Dispatch.BeginInvoke(() => { speakBar ??= new SpeakBar(this); speakBar.Refresh(); });
         Speak.Reference = OwnVoice;
+        Speak.Eleven = Eleven;
         Listen.Voiceprint = new WinVoiceprint();
         // No voices on the room side: its numbers would collide with the PC's.
         // The talk key's echo check: the meeting playing through a press is sent back otherwise.
@@ -150,7 +157,7 @@ sealed class Controller
         Fixes.Changed += Changed;
         Vocabulary.Changed += Changed;
         Listen.Fixes = Fixes;
-        RoomListen = new ListenEngine(Ling, Translator, Store, Notes, Settings, roomSide: true) { Fixes = Fixes };
+        RoomListen = new ListenEngine(Ling, Translator, Store, Notes, Settings, roomSide: true) { Fixes = Fixes, Pinned = () => Settings.Theirs };
         RoomListen.Changed += Changed;
         Listen.Changed += Changed;
         Notes.Changed += Changed;
