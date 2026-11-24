@@ -40,7 +40,7 @@ final class LiveWindowController: NSObject, NSWindowDelegate {
             p.minSize = NSSize(width: 300, height: 150)
             p.maxSize = NSSize(width: 560, height: 640)
             p.delegate = self
-            let host = FirstClickHostingView(rootView: LiveView(model: model, store: model.store, settings: model.settings,
+            let host = FirstClickHostingView(rootView: LiveView(model: model, store: model.store, settings: model.settings, notes: model.notes,
                                                                 close: { [weak self] in self?.hide() }))
             host.wantsLayer = true
             host.layer?.backgroundColor = .clear
@@ -109,7 +109,10 @@ struct LiveView: View {
     @ObservedObject var model: AppModel
     @ObservedObject var store: SessionStore
     @ObservedObject var settings: AppSettings
+    @ObservedObject var notes: NotesEngine
     var close: () -> Void = {}
+    /// The drop shows the conversation or the meeting's notes.
+    @State private var showNotes = false
 
     private var session: Session? { store.session(store.liveID) }
 
@@ -117,7 +120,7 @@ struct LiveView: View {
         VStack(spacing: 8) {
             header
             if settings.speakEnabled, let strip = micStrip { strip }
-            if model.running { transcript } else { idle }
+            if showNotes { notesView } else if model.running { transcript } else { idle }
             footer
         }
         .padding(.horizontal, 14).padding(.vertical, 12)
@@ -142,6 +145,10 @@ struct LiveView: View {
                         }
                     }
                 }
+            }
+            iconButton(showNotes ? "bubble.left.and.text.bubble.right" : "list.bullet.rectangle",
+                       help: showNotes ? "Back to the conversation" : "Meeting notes") {
+                withAnimation(.easeOut(duration: 0.15)) { showNotes.toggle() }
             }
             iconButton("gearshape", help: "Settings") { model.openSettings(.ai) }
             iconButton("xmark", help: "Hide (open it again from the menu bar)") { close() }
@@ -261,6 +268,58 @@ struct LiveView: View {
         }
     }
 
+    // MARK: Notes
+
+    private var notesView: some View {
+        let n = notes.notes
+        return ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 12) {
+                if n.isEmpty && n.todos.isEmpty && n.conclusions.isEmpty {
+                    Text(verbatim: ling.usable ? "Notes appear here after a minute or so of talk."
+                                               : "Notes need an AI key: add one in Settings.")
+                        .font(.system(size: 12)).foregroundStyle(Palette.tertiary)
+                        .frame(maxWidth: .infinity, alignment: .center).padding(.top, 18)
+                }
+                if !n.summary.isEmpty {
+                    Text(verbatim: n.summary).font(.system(size: 13, design: .rounded)).foregroundStyle(Palette.ink)
+                        .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+                }
+                noteList("Decisions", icon: "checkmark.seal", n.conclusions.map(\.text))
+                noteList("To-dos", icon: "circle", n.todos.map { t in t.owner.map { "\(t.text) · \($0)" } ?? t.text })
+                ForEach(n.topics) { topic in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(verbatim: topic.title).font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.ink)
+                        ForEach(Array(topic.points.enumerated()), id: \.offset) { _, p in
+                            Text(verbatim: "· " + p).font(.system(size: 11.5)).foregroundStyle(Palette.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, 2)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(maxHeight: .infinity)
+    }
+
+    private var ling: LingClient { model.ling }
+
+    @ViewBuilder
+    private func noteList(_ title: String, icon: String, _ items: [String]) -> some View {
+        if !items.isEmpty {
+            VStack(alignment: .leading, spacing: 5) {
+                Text(verbatim: title.uppercased()).font(.system(size: 9.5, weight: .bold)).foregroundStyle(Palette.tertiary)
+                ForEach(items, id: \.self) { item in
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Image(systemName: icon).font(.system(size: 9)).foregroundStyle(Color(red: 0.23, green: 0.51, blue: 0.96))
+                        Text(verbatim: item).font(.system(size: 12)).foregroundStyle(Palette.ink)
+                            .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+                    }
+                }
+            }
+        }
+    }
+
     // MARK: Call app microphone
 
     /// Apps people call from (browsers for Meet). Not Snart itself, nor a dictation app reading the
@@ -301,7 +360,38 @@ struct LiveView: View {
 
     // MARK: Talk
 
+    @ViewBuilder
     private var footer: some View {
+        if model.endAsked && model.running { endConfirm } else { talkRow }
+    }
+
+    /// "End meeting?" in place of the talk line: keeping going is the easy, default answer.
+    private var endConfirm: some View {
+        HStack(spacing: 8) {
+            Text(verbatim: "End meeting? Notes are finished after.").font(.system(size: 11)).foregroundStyle(Palette.ink)
+                .lineLimit(1)
+            Spacer(minLength: 4)
+            Button { model.endAsked = false } label: {
+                Text(verbatim: "Keep going").font(.system(size: 11, weight: .semibold)).foregroundStyle(Palette.ink)
+                    .padding(.horizontal, 10).frame(height: 24).modifier(Bead()).contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .keyboardShortcut(.cancelAction)
+            Button {
+                model.endAsked = false
+                model.stop()
+            } label: {
+                Text(verbatim: "End").font(.system(size: 11, weight: .semibold)).foregroundStyle(.white)
+                    .padding(.horizontal, 12).frame(height: 24)
+                    .background(Capsule().fill(Palette.warn))
+                    .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+        .frame(height: 26)
+    }
+
+    private var talkRow: some View {
         HStack(spacing: 8) {
             talkMode
             HStack(spacing: 6) {
@@ -315,7 +405,10 @@ struct LiveView: View {
             .padding(.horizontal, 10).frame(height: 26)
             .modifier(Bead())
             if model.running {
-                Button { model.requestStop() } label: {
+                Button {
+                    // Nothing said yet: nothing to lose, so no question.
+                    model.requestStop()
+                } label: {
                     Image(systemName: "stop.fill").font(.system(size: 9)).foregroundStyle(.white)
                         .frame(width: 26, height: 26)
                         .background(Circle().fill(Palette.ink.opacity(0.85)))

@@ -847,7 +847,17 @@ final class AppModel: ObservableObject {
 
     /// The menu (⌘R) and the panel switch: a meeting with lines is ended only after asking, with
     /// "继续记录" as the default so a stray Return keeps it going. An empty one just stops.
+    /// Ending asks in the bubble ("End meeting? Keep going | End"), not in an alert window.
+    @Published var endAsked = false
+
     func requestStop() {
+        guard listen.isRunning, let id = store.liveID, let s = store.session(id), !s.lines.isEmpty else { stop(); return }
+        liveWindow.show()
+        endAsked = true
+    }
+
+    /// The old alert, kept for nothing in this build but its strings.
+    private func requestStopAlert() {
         guard listen.isRunning, let id = store.liveID, let s = store.session(id), !s.lines.isEmpty else { stop(); return }
         NSApp.activate()
         let alert = NSAlert()
@@ -2465,7 +2475,7 @@ final class AppModel: ObservableObject {
             debugLog("live window number=\(liveWindow.windowNumber ?? 0)")
         case "liveRender":
             // liveRender:<png>: the live window, which screen capture can't see (sharingType none).
-            let r = ImageRenderer(content: LiveView(model: self, store: store, settings: settings).frame(width: 380, height: 460))
+            let r = ImageRenderer(content: LiveView(model: self, store: store, settings: settings, notes: notes).frame(width: 380, height: 460))
             r.scale = 2
             if let img = r.nsImage, let tiff = img.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff) {
                 try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: arg))
