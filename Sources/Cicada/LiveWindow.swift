@@ -303,6 +303,7 @@ struct LiveView: View {
 
     private var footer: some View {
         HStack(spacing: 8) {
+            talkMode
             HStack(spacing: 6) {
                 Image(systemName: speakIcon).font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(model.speakPhase == .idle ? Palette.tertiary : Palette.accent)
@@ -324,6 +325,31 @@ struct LiveView: View {
                 .help("Stop")
             }
         }
+    }
+
+    /// How you talk, always in sight: hold the key, or hands-free (the mic stays open while
+    /// listening, which is why it shows here and not only in settings).
+    private var talkMode: some View {
+        HStack(spacing: 1) {
+            modeButton("option", on: !settings.speakHandsFree, help: "Hold right ⌥ to talk") { settings.speakHandsFree = false }
+            modeButton("waveform", on: settings.speakHandsFree, help: "Hands-free: the mic stays open, it speaks after you pause") {
+                settings.speakHandsFree = true
+            }
+        }
+        .padding(2)
+        .modifier(Bead())
+    }
+
+    private func modeButton(_ icon: String, on: Bool, help: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon).font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(on ? Color.white : Palette.secondary)
+                .frame(width: 24, height: 22)
+                .background(Capsule().fill(on ? Palette.ink.opacity(0.85) : .clear))
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .help(help)
     }
 
     private var speakIcon: String {
