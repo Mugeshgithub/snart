@@ -337,6 +337,11 @@ struct LiveView: View {
     private var micStrip: AnyView? {
         let calls = model.micUsers.filter { Self.callApps.contains($0.bundleID) }
         let wrong = calls.first { if case .otherMic = $0.state { return true } else { return false } }
+        // The WhatsApp app (built from its iPhone app) lists no virtual microphones: say what works instead.
+        if let wrong, wrong.bundleID == "net.whatsapp.WhatsApp" {
+            return AnyView(strip(icon: "exclamationmark.triangle.fill", color: Palette.warn, fill: Palette.warnPale,
+                                 text: "The WhatsApp app can't use Snart's mic. Call from web.whatsapp.com in Chrome, mic set to BlackHole 2ch."))
+        }
         if let wrong, case .otherMic(let device) = wrong.state {
             return AnyView(strip(icon: "exclamationmark.triangle.fill", color: Palette.warn, fill: Palette.warnPale,
                                  text: "\(wrong.name) is on \(device): they can't hear you. Pick BlackHole 2ch as its mic."))
@@ -489,6 +494,10 @@ struct LiveView: View {
     private var speakLine: String {
         switch model.speakPhase {
         case .idle:
+            // The room mic and hands-free share your microphone: in-person mode pauses hands-free.
+            if settings.speakHandsFree, settings.hearsRoom, model.running {
+                return "Hands-free is paused: In-person mode uses the mic. Hold right ⌥"
+            }
             if settings.speakHandsFree {
                 return model.running ? "Hands-free: just talk, they hear \(theirName)" : "Hands-free starts when you start listening"
             }
