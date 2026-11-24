@@ -18,7 +18,7 @@
     <!-- Self-contained WPF is ~200 MB; compressed ~half. Starts a little slower the first time. -->
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <Product>Snart</Product>
-    <Company>wquguru</Company>
+    <Company>CognivexAI</Company>
   </PropertyGroup>
   <ItemGroup>
     <!-- WinForms is only here for the tray icon: keep its names out of the WPF code. -->

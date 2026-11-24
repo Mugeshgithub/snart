@@ -139,12 +139,12 @@ static class Install
         using var k = Registry.CurrentUser.CreateSubKey(UninstallKey);
         k.SetValue("DisplayName", SetupPlan.DisplayName);
         k.SetValue("DisplayVersion", Controller.Version);
-        k.SetValue("Publisher", "wquguru");
+        k.SetValue("Publisher", "CognivexAI");
         k.SetValue("DisplayIcon", $"{Exe},0");
         k.SetValue("InstallLocation", Folder);
         k.SetValue("UninstallString", $"\"{Exe}\" --uninstall");
         k.SetValue("QuietUninstallString", $"\"{Exe}\" --uninstall");
-        k.SetValue("URLInfoAbout", "https://cicada.indaloop.app");
+        k.SetValue("URLInfoAbout", "https://github.com/Mugeshgithub/snart");
         k.SetValue("InstallDate", DateTime.Now.ToString("yyyyMMdd"));
         k.SetValue("EstimatedSize", (int)(new FileInfo(Exe).Length / 1024), RegistryValueKind.DWord);
         k.SetValue("NoModify", 1, RegistryValueKind.DWord);

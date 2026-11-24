@@ -275,7 +275,7 @@ sealed class MainWindow : Window
             var disc = new Border
             {
                 Width = 26, Height = 26, CornerRadius = new CornerRadius(13), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 14, 0),
-                Background = done ? Palette.Ink : now ? Palette.Live : Palette.Surface, BorderBrush = done ? Palette.Ink : now ? Palette.Live : Palette.Line, BorderThickness = new Thickness(1),
+                Background = done ? Palette.Ink : now ? Palette.AccentFill : Palette.Surface, BorderBrush = done ? Palette.Ink : now ? Palette.AccentFill : Palette.Line, BorderThickness = new Thickness(1),
                 Child = done ? Ui.Icon(Icons.Check, 13, Brushes.White, stroke: 2) : Center(Ui.Text(failed ? "!" : (i + 1).ToString(), 12, now ? Brushes.White : Palette.Body, FontWeights.Bold, wrap: false)),
             };
             var head = Ui.Row(8, Ui.Text(title, 14, done ? Palette.Secondary : Palette.Ink, done ? FontWeights.Normal : Palette.Strong, wrap: false));
@@ -956,8 +956,8 @@ sealed class MainWindow : Window
 
         // The slider: a grey rail, the played part in the accent, a round handle; click or drag.
         var rail = new Border { Height = 4, CornerRadius = new CornerRadius(2), Background = Palette.Line, VerticalAlignment = VerticalAlignment.Center };
-        played = new Border { Height = 4, CornerRadius = new CornerRadius(2), Background = Palette.Live, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left, Width = 0 };
-        thumb = new System.Windows.Shapes.Ellipse { Width = 12, Height = 12, Fill = Palette.Live, Stroke = Brushes.White, StrokeThickness = 2, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left };
+        played = new Border { Height = 4, CornerRadius = new CornerRadius(2), Background = Palette.AccentFill, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left, Width = 0 };
+        thumb = new System.Windows.Shapes.Ellipse { Width = 12, Height = 12, Fill = Palette.AccentFill, Stroke = Brushes.White, StrokeThickness = 2, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left };
         track = new Grid { Height = 24, Background = Brushes.Transparent, Cursor = System.Windows.Input.Cursors.Hand, Margin = new Thickness(12, 0, 12, 0), Children = { rail, played, thumb } };
         System.Windows.Automation.AutomationProperties.SetName(track, L("播放"));
         void SeekTo(System.Windows.Input.MouseEventArgs e)

@@ -39,5 +39,5 @@ public static class SetupPlan
     /// Every name a shortcut may have had, so a reinstall in another language leaves only one.
     public static readonly string[] ShortcutNames = ["Snart"];
     /// Settings › Apps sorts and searches by name: both names, so either language finds it.
-    public const string DisplayName = "知了 Cicada";
+    public const string DisplayName = "Snart";
 }
