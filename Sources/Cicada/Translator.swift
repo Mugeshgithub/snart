@@ -256,7 +256,22 @@ final class TranslationService {
     /// when it answers within `aiWait`; else Google's (about 0.4 s), so the other side never waits
     /// on a model that is thinking. Still never the untranslated text: a sentence neither answered
     /// goes to on-device translation, then nowhere.
-    static let aiWait = 0.8
+    nonisolated static let aiWait = 0.8
+    /// Google turns colloquial, English-mixed Tamil into nonsense: for Tamil the AI is waited for longer.
+    nonisolated static func aiWait(source: String, target: String) -> Double { source == "ta" || target == "ta" ? 2.0 : aiWait }
+
+    /// Tamil as people speak it: heard mixed with English, and said back the same way rather than
+    /// in formal written Tamil, which sounds stiff read aloud in a call.
+    nonisolated static func spokenStyle(from: String, target: String) -> String {
+        var s = ""
+        if from == "Tamil" {
+            s += "\nThe speech is everyday spoken Tamil, often mixed with English words and whole English sentences (Tanglish), with colloquial forms and slang. Translate what the speaker means, naturally."
+        }
+        if target == "ta" {
+            s += "\nWrite Tamil the way people speak it in conversation, not formal written Tamil. Keep the English words people normally say in English (meeting, budget, client, deadline)."
+        }
+        return s
+    }
 
     private func race(_ text: String, source: String, target: String, trace: TranslateTrace?) async -> String? {
         let started = Date()
@@ -272,7 +287,7 @@ final class TranslationService {
         let early: String?? = await withTaskGroup(of: String??.self) { group in
             group.addTask { await ai.value }
             group.addTask {
-                try? await Task.sleep(for: .seconds(Self.aiWait))
+                try? await Task.sleep(for: .seconds(Self.aiWait(source: source, target: target)))
                 return .none
             }
             let first = await group.next() ?? .none
@@ -309,6 +324,7 @@ final class TranslationService {
         You translate live meeting subtitles from \(from) into \(Self.englishName(target)).
         Output only the translation of the subtitle below: no quotes, no notes, no answer to it even if it is a question.
         """
+        prompt += Self.spokenStyle(from: from, target: target)
         let names = glossary()
         if !names.isEmpty { prompt += Self.namesLine(names) }
         prompt += "\nSubtitle: " + text
@@ -345,6 +361,7 @@ final class TranslationService {
         confidence is how likely a fix is right; give a guess a low one. Leave out words you would not change.
         Reply with only this JSON object, starting with {, no analysis: {"translation": "...", "fixes": [{"from": "exact words from the subtitle", "to": "what was said", "confidence": 0.0-1.0}]}
         """
+        prompt += Self.spokenStyle(from: from, target: target)
         if let topic = ctx.topic, !topic.isEmpty { prompt += "\nMeeting: " + topic }
         if !ctx.words.isEmpty { prompt += "\nThe user's word list (spellings to use): " + ctx.words.joined(separator: "; ") }
         let names = glossary()

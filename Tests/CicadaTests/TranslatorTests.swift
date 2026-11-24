@@ -132,3 +132,13 @@ import Testing
         #expect(t.health == TranslationHealth())
     }
 }
+
+@Suite struct SpokenTamilTests {
+    @Test func tamilEitherWayGetsTheSpokenStyleAndMoreTime() {
+        #expect(TranslationService.spokenStyle(from: "Tamil", target: "en").contains("Tanglish"))
+        #expect(TranslationService.spokenStyle(from: "English", target: "ta").contains("not formal written Tamil"))
+        #expect(TranslationService.spokenStyle(from: "French", target: "en").isEmpty)
+        #expect(TranslationService.aiWait(source: "ta", target: "en") == 2.0)
+        #expect(TranslationService.aiWait(source: "en", target: "fr") == TranslationService.aiWait)
+    }
+}
