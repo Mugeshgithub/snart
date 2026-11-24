@@ -981,6 +981,24 @@ final class SpeakEngine {
         var count = 0
         var firstAt: TimeInterval?
         var firstPlayed: Date?
+        // Held until `cushion` has come in: the service sends about as fast as it plays, and a piece
+        // a little late left a gap mid-word. Starting a beat later keeps the voice smooth.
+        var held: [AVAudioPCMBuffer] = []
+        var heldSeconds = 0.0
+        var dry = 0
+        func flush() {
+            guard !held.isEmpty, outputReady(for: format) else { return }
+            for b in held { player.scheduleBuffer(b, completionHandler: nil) }
+            if !player.isPlaying { player.play() }
+            if firstPlayed == nil {
+                firstPlayed = Date()
+                // The sentence's first sound, not this part's: the latency the bar reports.
+                if firstAudioAt == nil { firstAudioAt = firstPlayed }
+            }
+            streamPlayEnd = max(streamPlayEnd, Date()) + heldSeconds
+            held = []
+            heldSeconds = 0
+        }
         do {
             for try await chunk in stream {
                 var bytes = carry + chunk
@@ -996,22 +1014,22 @@ final class SpeakEngine {
                 }
                 if count == 0 {
                     firstAt = Date().timeIntervalSince(started)
-                    firstPlayed = Date()
-                    // The sentence's first sound, not this part's: the latency the bar reports.
-                    if firstAudioAt == nil { firstAudioAt = firstPlayed }
                     configureOutput(format: format, device: device)
                 }
                 // The engine may have been replaced while the stream ran (the echo-cancelling unit
                 // let go): a player not wired for this format throws, and that took the app down.
                 guard outputReady(for: format) else { break }
-                player.scheduleBuffer(buf, completionHandler: nil)
-                if !player.isPlaying { player.play() }
-                streamPlayEnd = max(streamPlayEnd, Date()) + Double(frames) / format.sampleRate
                 count += 1
+                if firstPlayed != nil, Date() > streamPlayEnd { dry += 1 }
+                held.append(buf)
+                heldSeconds += Double(frames) / format.sampleRate
+                if firstPlayed != nil || heldSeconds >= Self.cushion { flush() }
             }
+            flush()
         } catch {
             debugLog("ming voice failed: \(error)")
             if count == 0 { return false }
+            flush()
         }
         guard count > 0 else { return false }
         // Wait for the queued audio to finish before the next utterance.
@@ -1020,9 +1038,12 @@ final class SpeakEngine {
             tail.frameLength = 240
             await waitPlayed(tail, limit: max(0, streamPlayEnd.timeIntervalSinceNow) + 2)
         }
-        debugLog("spoke ming \(count) chunks to \(device?.name ?? "default output") first audio \(String(format: "%.2f", firstAt ?? 0)) s")
+        debugLog("spoke ming \(count) chunks to \(device?.name ?? "default output") first audio \(String(format: "%.2f", firstAt ?? 0)) s, ran dry \(dry)")
         return true
     }
+
+    /// Audio held before a stream starts playing (see `speakStream`).
+    static let cushion = 0.25
 
     private static let streamFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 24000, channels: 1, interleaved: false)!
 
