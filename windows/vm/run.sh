@@ -1,4 +1,6 @@
 #!/bin/bash
+# Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+# Modified by CognivexAI, 2026.
 # Runs the Windows 11 ARM64 test VM under QEMU (HVF), headless: VNC on :1, the QEMU monitor on
 # $VM/monitor.sock, SSH on localhost:2222. First run (no disk yet) installs Windows unattended.
 #   VM=~/VMs/cicada-win11 windows/vm/run.sh        # needs win11.iso, virtio-win.iso, vm_key in $VM
@@ -26,6 +28,11 @@ if [ ! -f disk.qcow2 ]; then
            -drive file=seed.iso,media=cdrom,if=none,id=cd1,readonly=on -device usb-storage,drive=cd1)
 fi
 
+# The installer's boot loader drew nothing and hung on virtio-gpu with the 26300 ISO (2026-11-24):
+# install on ramfb, run on virtio-gpu.
+display=(-device virtio-gpu-pci)
+[ ${#install[@]} -gt 0 ] && display=(-device ramfb)
+
 # No TPM: HVF refuses tpm-tis-device (HV_BAD_ARGUMENT); the answer file bypasses Windows 11's check.
 qemu-system-aarch64 \
   -name cicada-win11 -machine virt,highmem=on -accel hvf -cpu host -smp 4 -m 8G -device qemu-xhci \
@@ -34,7 +41,7 @@ qemu-system-aarch64 \
   -device nvme,drive=hd,serial=cicada,bootindex=1 -drive file=disk.qcow2,if=none,id=hd,discard=unmap \
   ${install[@]+"${install[@]}"} \
   ${virtio[@]+"${virtio[@]}"} \
-  -device virtio-gpu-pci -device usb-kbd -device usb-tablet \
+  "${display[@]}" -device usb-kbd -device usb-tablet \
   -audiodev none,id=snd -device usb-audio,audiodev=snd \
   -nic user,model=virtio-net-pci,hostfwd=tcp:127.0.0.1:2222-:22 \
   -vnc 127.0.0.1:1 -monitor unix:"$VM/monitor.sock",server,nowait -daemonize -pidfile "$VM/qemu.pid" </dev/null >/dev/null 2>"$VM/qemu.log" || { cat "$VM/qemu.log" >&2; exit 1; }
