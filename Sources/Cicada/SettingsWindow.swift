@@ -501,6 +501,12 @@ struct SettingsView: View {
                         .background(Capsule().fill(Palette.brand.opacity(0.1)))
                 }
                 Text(verbatim: "by CognivexAI").font(.system(size: 10)).foregroundStyle(Palette.secondary).lineLimit(1)
+                // The project Snart is built on (Apache-2.0), one click away.
+                Link(destination: URL(string: "https://github.com/wquguru/cicada")!) {
+                    Text(verbatim: "Built on Cicada (open source)").font(.system(size: 10)).foregroundStyle(Palette.secondary).lineLimit(1)
+                }
+                .buttonStyle(.plain)
+                .help("github.com/wquguru/cicada")
             }
             .fixedSize()
             Spacer(minLength: 0)
