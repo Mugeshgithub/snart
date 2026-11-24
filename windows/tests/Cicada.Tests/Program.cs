@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 // Unit tests for Cicada.Core: `scripts/test.sh` (or `dotnet run --project tests/Cicada.Tests`).
 // Each test is a method below; a failed Check throws and the runner reports it. No network:
 // LingClient runs against a fake handler.
@@ -453,7 +455,7 @@ static class Tests
         var ling = Client(new Fake(_ => Reply("{}")));
         var audio = new FakeAudio();
         var store = new SessionStore { Audio = audio };
-        var settings = new AppSettings { Target = "zh-CN", SpeakerVoices = false };
+        var settings = new AppSettings { AiProvider = "ling", Target = "zh-CN", SpeakerVoices = false };
         var main = new ListenEngine(ling, new Translator(ling), store, new NotesEngine(ling, store), settings);
         var room = new ListenEngine(ling, new Translator(ling), store, new NotesEngine(ling, store), settings, roomSide: true);
         var pc = new GappySource((0.5, true), (2.5, false));
@@ -484,7 +486,7 @@ static class Tests
         var ling = Client(fake);
         var store = new SessionStore { Audio = new FakeAudio() };
         var audio = (FakeAudio)store.Audio;
-        var engine = new ListenEngine(ling, new Translator(ling), store, new NotesEngine(ling, store), new AppSettings { Target = "zh-CN", SpeakerVoices = false });
+        var engine = new ListenEngine(ling, new Translator(ling), store, new NotesEngine(ling, store), new AppSettings { AiProvider = "ling", Target = "zh-CN", SpeakerVoices = false });
         var source = new GappySource((0.5, true), (2.5, false), (0.5, true));
         var ended = new TaskCompletionSource();
         source.Ended += _ => ended.TrySetResult();
@@ -499,7 +501,7 @@ static class Tests
         Check(recorded > wall - 1.1 && recorded < wall + 0.2, $"the recording ({recorded:F2} s) is as long as the meeting ({wall:F2} s)");
 
         var off = new SessionStore { Audio = new FakeAudio() };
-        var quiet = new ListenEngine(ling, new Translator(ling), off, new NotesEngine(ling, off), new AppSettings { RecordAudio = false });
+        var quiet = new ListenEngine(ling, new Translator(ling), off, new NotesEngine(ling, off), new AppSettings { AiProvider = "ling", RecordAudio = false });
         quiet.Start(new GappySource((0.2, true)));
         Check(!File.Exists(Recording.Partial(Recording.SystemAudio(quiet.SessionId!))), "保存会议录音 off: no file");
         await quiet.Stop();
@@ -1084,8 +1086,6 @@ static class Tests
             var s = new Session { Notes = new MeetingNotes { Summary = "s", Todos = [new NoteItem { Text = "Send the deck", Owner = "对方" }] } };
             Check(SessionStore.Markdown(s).Contains("- [ ] Send the deck (Them)"), "export: " + SessionStore.Markdown(s));
             Equal("Misheard words fixed: 3", Strings.LF("改了 %lld 处听错的词", 3), "banner");
-            Strings.Load(res, "zh-Hans");
-            Equal("发资料（对方）", new NoteItem { Text = "发资料", Owner = "对方" }.WithOwner, "Chinese");
         }
         finally { Strings.Load(res, "zh-Hans"); }
     }
@@ -1161,7 +1161,7 @@ static class Tests
     {
         var key = new AIKey(new PlainProtector());
         key.Save("sk-test-0000000000");
-        return new LingClient(key, fake, clock: clock);
+        return new LingClient(key, fake, () => new AppSettings { AiProvider = "ling" }.AIConfig(), clock);
     }
 
     /// The start gate's time, moved on by each wait instead of waiting (one request at a time).
@@ -1475,7 +1475,7 @@ static class Tests
         {
             var ling = Client(fake);
             var store = new SessionStore();
-            var settings = new AppSettings { Target = "zh-CN", SpeakerVoices = false };
+            var settings = new AppSettings { AiProvider = "ling", Target = "zh-CN", SpeakerVoices = false };
             var notes = new NotesEngine(ling, store);
             var main = new ListenEngine(ling, new Translator(ling), store, notes, settings);
             var room = new ListenEngine(ling, new Translator(ling), store, notes, settings, roomSide: true);
@@ -1524,7 +1524,7 @@ static class Tests
         {
             var ling = Client(fake);
             var store = new SessionStore();
-            var engine = new ListenEngine(ling, new Translator(ling), store, new NotesEngine(ling, store), new AppSettings { Target = "zh-CN" })
+            var engine = new ListenEngine(ling, new Translator(ling), store, new NotesEngine(ling, store), new AppSettings { AiProvider = "ling", Target = "zh-CN" })
             {
                 // Told apart by length: the first stretch is 2.5 s, the second 3 s.
                 Voiceprint = new FakePrint(s => s.Length < 50_000 ? Unit(1, 0, 0) : Unit(0, 1, 0)),
@@ -1604,7 +1604,7 @@ static class Tests
     }
 
     static SpeakEngine Speaker(LingClient ling, NoVoice voice, AppSettings? settings = null) =>
-        new(ling, new Translator(ling, new Fake(_ => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable))), new SessionStore(), settings ?? new AppSettings(), () => "en", () => null, voice);
+        new(ling, new Translator(ling, new Fake(_ => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable))), new SessionStore(), settings ?? new AppSettings { AiProvider = "ling" }, () => "en", () => null, voice);
 
     public static async Task SpeaksTheTranslationNeverTheOriginal()
     {
@@ -1626,7 +1626,7 @@ static class Tests
             });
             var voice = new NoVoice();
             var sink = new Sink();
-            var engine = Speaker(Client(fake), voice, new AppSettings { SpeakFrom = "zh-CN" });
+            var engine = Speaker(Client(fake), voice, new AppSettings { AiProvider = "ling", SpeakFrom = "zh-CN" });
             var heard = await engine.Speak(Wav.Bytes(Tone(1)), sink);
             Equal("Can we finish testing by Wednesday?", heard, "the room hears the translation");
             Equal("Can we finish testing by Wednesday?", spoken.Single(), "and only it is voiced");
@@ -1639,14 +1639,14 @@ static class Tests
                 : new HttpResponseMessage(HttpStatusCode.InternalServerError));
             var quiet = new Sink();
             var voice2 = new NoVoice();
-            var e2 = Speaker(Client(echo), voice2, new AppSettings { SpeakFrom = "zh-CN" });
+            var e2 = Speaker(Client(echo), voice2, new AppSettings { AiProvider = "ling", SpeakFrom = "zh-CN" });
             Check(await e2.Speak(Wav.Bytes(Tone(1)), quiet) is null, "no translation, nothing said");
             Check(quiet.Chunks.Count == 0 && voice2.Calls == 0 && e2.State == SpeakEngine.Phase.Failed, "and no voice at all");
 
             // The virtual mic went away during the press: nothing is played anywhere (never the speakers).
             var gone = new Sink { Ready = false };
             var voice3 = new NoVoice();
-            var e3 = Speaker(Client(fake), voice3, new AppSettings { SpeakFrom = "zh-CN" });
+            var e3 = Speaker(Client(fake), voice3, new AppSettings { AiProvider = "ling", SpeakFrom = "zh-CN" });
             Check(await e3.Speak(Wav.Bytes(Tone(1)), gone) is null, "no virtual mic, nothing said");
             Check(gone.Chunks.Count == 0 && voice3.Calls == 0 && e3.State == SpeakEngine.Phase.Failed, "and no voice at all");
             Equal("没有虚拟麦克风 · 没有说出去", e3.Problem, "the bar says why");
@@ -1667,7 +1667,7 @@ static class Tests
                 if (body.Contains(LingClient.AudioModel)) { Interlocked.Increment(ref asked); return Reply(reply); }
                 return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("data:{\"type\":\"speech.audio.done\"}\n\n") };
             });
-            var engine = Speaker(Client(fake), new NoVoice(), new AppSettings { SpeakFrom = "zh-CN" });
+            var engine = Speaker(Client(fake), new NoVoice(), new AppSettings { AiProvider = "ling", SpeakFrom = "zh-CN" });
             // A press nobody spoke in: not even sent to the service.
             Check(await engine.Speak(Wav.Bytes(new short[16000 * 3]), new Sink()) is null && asked == 0, "a silent press sends nothing");
             Check(engine.State == SpeakEngine.Phase.Idle && engine.Problem is null, "and says nothing about it");
@@ -1729,7 +1729,7 @@ static class Tests
             await Task.Delay(20);
             var queued = ling.Chat("meeting 2", "i", Priority.Translate);
             await Task.Delay(20);
-            var said = Speaker(ling, new NoVoice(), new AppSettings { SpeakFrom = "zh-CN" }).Speak(Wav.Bytes(Tone(1)), new Sink());
+            var said = Speaker(ling, new NoVoice(), new AppSettings { AiProvider = "ling", SpeakFrom = "zh-CN" }).Speak(Wav.Bytes(Tone(1)), new Sink());
             await Task.WhenAll(first, queued, (Task)said);
             var order = fake.Calls.Select(c => c.body.Contains(LingClient.AudioModel) ? "hear" : c.body.Contains("meeting 2") ? "meeting 2" : c.body.Contains("meeting 1") ? "meeting 1" : "other").ToList();
             Equal("meeting 1,hear,meeting 2", string.Join(",", order.Where(o => o != "other")), "my words jump the queue");
@@ -1759,7 +1759,7 @@ static class Tests
             var ling = Client(fake);
             var store = new SessionStore();
             var notes = new NotesEngine(ling, store);
-            var engine = new ListenEngine(ling, new Translator(ling), store, notes, new AppSettings { Target = "zh-CN" });
+            var engine = new ListenEngine(ling, new Translator(ling), store, notes, new AppSettings { AiProvider = "ling", Target = "zh-CN" });
             var path = Path.Combine(Path.GetTempPath(), $"cicada-e2e-{Environment.ProcessId}.wav");
             File.WriteAllBytes(path, Wav.Bytes([.. Tone(1), .. Silence(1), .. Tone(1.6), .. Silence(1)]));
             var src = new FileAudioSource(path, speed: 0);
@@ -1996,7 +1996,7 @@ static class Tests
 
     static (LingClient ling, AppSettings settings) Using(Service fake, string provider = "zenmux", string? key = "sk-test-0000000000", AppSettings? s = null)
     {
-        s ??= new AppSettings();
+        s ??= new AppSettings { AiProvider = "ling" };
         s.AiProvider = provider;
         var k = new AIKey(new PlainProtector(), service: () => s.AiProvider);
         k.Remove();
@@ -2013,10 +2013,10 @@ static class Tests
         Equal("qwen/qwen3.8-omni-flash", c.HearModel, "hear");
         Equal("inclusionai/ling-3.0-flash", c.TextModel, "text");
         Equal("google/gemini-3.8-flash-tts", c.VoiceModel, "voice");
-        var ling = new AppSettings().AIConfig();
+        var ling = new AppSettings { AiProvider = "ling" }.AIConfig();
         Equal(("Ming-3.0-audio-flash", "Ling-3.1-flash"), (ling.HearModel, ling.TextModel), "Ling");
-        Equal("Ling-3.0-flash", new AppSettings { Model = "Ling-3.0-flash" }.AIConfig().TextModel, "Ling keeps its own key");
-        Equal("ling", AIProvider.Named("openai").Id, "OpenAI isn't offered: Ling");
+        Equal("Ling-3.0-flash", new AppSettings { AiProvider = "ling", Model = "Ling-3.0-flash" }.AIConfig().TextModel, "Ling keeps its own key");
+        Equal("openai", AIProvider.Named("openai").Id, "Snart offers OpenAI");
         Equal(0.6, AIProvider.Ling.Spacing, "Ling's gate");
         Equal(0.1, AIProvider.ZenMux.Spacing, "the aggregators'");
     }
@@ -2054,7 +2054,7 @@ static class Tests
         Equal("http://192.168.1.20:8000/v1/", AIProvider.CustomBase("192.168.1.20:8000/v1"), "no scheme on the local network: http");
         Equal("https://10.0.0.5.evil.com/v1/", AIProvider.CustomBase("10.0.0.5.evil.com/v1"), "a name that looks like one: https");
         Check(AIProvider.IsNearby("http://192.168.1.20:8000/v1/") && !AIProvider.IsLocal("http://192.168.1.20:8000/v1/"), "nearby but not this computer");
-        var (ling, s) = Using(new Service((_, _) => Reply("ok")), "custom", key: null, new AppSettings { AiCustomBase = "http://192.168.1.20:8000/v1" });
+        var (ling, s) = Using(new Service((_, _) => Reply("ok")), "custom", key: null, new AppSettings { AiProvider = "ling", AiCustomBase = "http://192.168.1.20:8000/v1" });
         Equal("", ling.CurrentKey(), "a service on the local network needs no key");
     }
 
@@ -2069,7 +2069,7 @@ static class Tests
         s.AiCustomHearBase = "http://example.com/v1";
         Equal(null, s.AIConfig().HearBase, "http off the local network is no address");
         Equal("https://zenmux.ai/api/v1/", new AppSettings { AiProvider = "zenmux" }.AIConfig().HearBase, "other services: theirs");
-        Equal("https://api.ant-ling.com/v1/", new AppSettings().AIConfig().HearBase, "Ling");
+        Equal("https://api.ant-ling.com/v1/", new AppSettings { AiProvider = "ling" }.AIConfig().HearBase, "Ling");
         // Not reaching a hear server of its own says nothing about the text address.
         Equal((AICheck.StepId.Hear, AICheck.Reason.Unreachable, (int?)null), AICheck.Classify(LingException.Kind.Network, 0, AICheck.StepId.Hear, hearElsewhere: true), "hear elsewhere");
         Equal((AICheck.StepId.Reach, AICheck.Reason.Unreachable, (int?)null), AICheck.Classify(LingException.Kind.Timeout, 0, AICheck.StepId.Hear), "same address");
@@ -2150,7 +2150,7 @@ static class Tests
             // No JSON mode on this server (OpenRouter's Novita for Ling 3.1 Flash): 400 with or
             // without the kwargs. Asked again without JSON mode.
             var fake = new Service((url, body) => body.Contains("response_format") ? Status(400) : Reply("好"));
-            var (ling, _) = Using(fake, "custom", key: null, new AppSettings { AiCustomBase = "http://192.168.1.20:8000/v1", AiModels = { ["custom"] = "m" } });
+            var (ling, _) = Using(fake, "custom", key: null, new AppSettings { AiProvider = "ling", AiCustomBase = "http://192.168.1.20:8000/v1", AiModels = { ["custom"] = "m" } });
             Equal("好", await ling.Chat("x", "Notes.", Priority.Translate, json: true), "answered without JSON mode");
             var last = fake.Sent[^1].body;
             Check(!last.Contains("response_format") && last.Contains("chat_template_kwargs"), "thinking stays off");
@@ -2165,7 +2165,7 @@ static class Tests
         var old = LingClient.Spacing; LingClient.Spacing = 0;
         try
         {
-            var s = new AppSettings { AiCustomBase = "http://192.168.1.20:8000/v1", AiModels = { ["custom"] = "m" }, AiHearModels = { ["custom"] = "m" } };
+            var s = new AppSettings { AiProvider = "ling", AiCustomBase = "http://192.168.1.20:8000/v1", AiModels = { ["custom"] = "m" }, AiHearModels = { ["custom"] = "m" } };
             var fake = new Service((url, body) => url.EndsWith("/models") ? Status(404) : body.Contains("response_format") ? Status(400)
                 : body.Contains("JSON object") ? Reply("```json\n{\"ok\": true}\n```") : Reply("周五发布。"));
             var (ling, _) = Using(fake, "custom", key: null, s);
@@ -2203,7 +2203,7 @@ static class Tests
         Check(s.GoogleOff, "on with the custom service");
         s.AiProvider = "zenmux";
         Check(!s.GoogleOff && s.AiCustomOnly, "kept but inert with another service");
-        Check(Json.Write(new AppSettings { AiCustomOnly = true }).Contains("\"aiCustomOnly\": true"), "the Mac's key");
+        Check(Json.Write(new AppSettings { AiProvider = "ling", AiCustomOnly = true }).Contains("\"aiCustomOnly\": true"), "the Mac's key");
         Check(Json.Read<AppSettings>("{\"aiCustomOnly\":true}")!.AiCustomOnly, "read back");
     }
 
@@ -2432,7 +2432,7 @@ static class Tests
         {
             var gate = new TaskCompletionSource();
             var fake = new Service((_, _) => { gate.Task.Wait(); return Reply("周五发布。"); });
-            var (ling, s) = Using(fake, "custom", key: null, new AppSettings { AiCustomBase = "http://localhost:8000/v1", AiModels = { ["custom"] = "m" } });
+            var (ling, s) = Using(fake, "custom", key: null, new AppSettings { AiProvider = "ling", AiCustomBase = "http://localhost:8000/v1", AiModels = { ["custom"] = "m" } });
             var slow = Task.Run(ling.Check);
             while (fake.Sent.Count == 0) await Task.Delay(5);
             s.AiCustomBase = "https://api.example.com/v1"; // remote now, and no key
@@ -2473,7 +2473,7 @@ static class Tests
     public static void AudioGoesInTheFormEachModelTakes()
     {
         byte[] wav = [1, 2, 3];
-        Equal("{\"type\":\"audio_url\",\"audio_url\":{\"url\":\"data:audio/wav;base64,AQID\"}}", new AppSettings().AIConfig().AudioPart(wav, "Ming-3.0-audio-flash").ToJsonString(), "Ming");
+        Equal("{\"type\":\"audio_url\",\"audio_url\":{\"url\":\"data:audio/wav;base64,AQID\"}}", new AppSettings { AiProvider = "ling" }.AIConfig().AudioPart(wav, "Ming-3.0-audio-flash").ToJsonString(), "Ming");
         var zen = new AppSettings { AiProvider = "zenmux" }.AIConfig();
         Equal("{\"type\":\"input_audio\",\"input_audio\":{\"data\":\"AQID\",\"format\":\"wav\"}}", zen.AudioPart(wav, "google/gemini-3.1-flash-lite").ToJsonString(), "input_audio");
         Equal("data:audio/wav;base64,AQID", zen.AudioPart(wav, "qwen/qwen3.8-omni-flash")["input_audio"]!["data"]!.GetValue<string>(), "Qwen wants a data URL");
@@ -2498,7 +2498,7 @@ static class Tests
 
     public static void OneKeyFilePerService()
     {
-        var s = new AppSettings();
+        var s = new AppSettings { AiProvider = "ling" };
         var k = new AIKey(new PlainProtector(), service: () => s.AiProvider);
         k.Save("sk-ling-000000000");
         s.AiProvider = "zenmux";
@@ -2516,7 +2516,7 @@ static class Tests
     public static void ALocalCustomServiceNeedsNoKey()
     {
         var (ling, s) = Using(new Service((_, _) => Reply("ok")), "custom", key: null,
-            new AppSettings { AiCustomBase = "localhost:11434/v1", AiModels = { ["custom"] = "qwen3:14b" } });
+            new AppSettings { AiProvider = "ling", AiCustomBase = "localhost:11434/v1", AiModels = { ["custom"] = "qwen3:14b" } });
         Equal("", ling.CurrentKey(), "no key needed");
         Check(ling.HasKey, "has one, in effect");
         s.AiCustomBase = "https://api.example.com/v1";
@@ -2552,7 +2552,7 @@ static class Tests
             var (ling, s) = Using(new Service((url, body) =>
                 url.EndsWith("models") ? Status(200, "{\"data\":[{\"id\":\"inclusionai/ling-3.0-flash\",\"input_modalities\":[\"text\"],\"output_modalities\":[\"text\"]}]}")
                 : body.Contains("input_audio") ? Status(400) : Reply("OK")),
-                s: new AppSettings { AiHearModels = { ["zenmux"] = "x/text-only" } });
+                s: new AppSettings { AiProvider = "ling", AiHearModels = { ["zenmux"] = "x/text-only" } });
             var (state, _) = await ling.Check();
             Equal(KeyState.Ok, state, "the key is good");
             Equal(false, ling.Hears, "but the model can't hear");
@@ -2668,7 +2668,7 @@ static class Tests
             {
                 if (body.Contains("slow/gone")) { Thread.Sleep(400); return Status(404); }
                 return url.EndsWith("models") ? Status(404) : Reply("OK");
-            }), s: new AppSettings { AiModels = { ["zenmux"] = "slow/gone" } });
+            }), s: new AppSettings { AiProvider = "ling", AiModels = { ["zenmux"] = "slow/gone" } });
             var first = ling.Check();
             await Task.Delay(50);
             s.AiModels["zenmux"] = "fast/here";
@@ -2848,7 +2848,7 @@ static class Tests
             // One JSON with a WAV in it.
             var wav = Wav.Bytes([7, 8], 24000);
             var one = new Service((_, _) => new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent($"{{\"audio\":\"{Convert.ToBase64String(wav)}\"}}", System.Text.Encoding.UTF8, "application/json") });
-            (ling, _) = Using(one, "custom", s: new AppSettings { AiCustomBase = "https://x.example/v1", AiModels = { ["custom"] = "m" }, AiVoiceModels = { ["custom"] = "kokoro" }, AiCustomVoice = "af_heart" });
+            (ling, _) = Using(one, "custom", s: new AppSettings { AiProvider = "ling", AiCustomBase = "https://x.example/v1", AiModels = { ["custom"] = "m" }, AiVoiceModels = { ["custom"] = "kokoro" }, AiCustomVoice = "af_heart" });
             Equal("7,0,8,0", await Joined(ling.Speech("Hi", "af_heart")), "JSON WAV");
             Equal("7,0,8,0", string.Join(",", LingClient.PcmFromWav(wav)), "the data chunk");
         }
@@ -2860,7 +2860,7 @@ static class Tests
         var old = LingClient.Spacing; LingClient.Spacing = 0;
         try
         {
-            var settings = new AppSettings { AiCustomBase = "https://x.example/v1", AiModels = { ["custom"] = "m" }, SpeakVoices = { ["en"] = "ming:US_Emma" } };
+            var settings = new AppSettings { AiProvider = "ling", AiCustomBase = "https://x.example/v1", AiModels = { ["custom"] = "m" }, SpeakVoices = { ["en"] = "ming:US_Emma" } };
             var fake = new Service((_, _) => Reply("ok"));
             var (ling, _) = Using(fake, "custom", s: settings);
             Check(!ling.Speaks, "no speech model, no service voice");
@@ -2880,12 +2880,12 @@ static class Tests
         Equal("cloud:Kore,cloud:Aoede,cloud:Charon,cloud:Puck,system", string.Join(",", VoiceCatalog.Options("ja", zen).Select(v => v.Id)), "Gemini's voices in every language, then Windows'");
         Equal("cloud:Kore", VoiceCatalog.DefaultId("en", zen, speaks: true), "the service's first");
         Equal("system", VoiceCatalog.DefaultId("en", zen, speaks: false), "Windows' until it can speak");
-        var settings = new AppSettings { SpeakVoices = { ["en"] = "ming:US_Emma" } };
+        var settings = new AppSettings { AiProvider = "ling", SpeakVoices = { ["en"] = "ming:US_Emma" } };
         Equal("cloud:Kore", VoiceCatalog.Chosen(settings, "en", zen, true), "a Ming voice isn't sent to ZenMux");
-        Equal("ming:US_Emma", VoiceCatalog.Chosen(settings, "en", new AppSettings().AIConfig(), true), "and is used again on Ling");
+        Equal("ming:US_Emma", VoiceCatalog.Chosen(settings, "en", new AppSettings { AiProvider = "ling" }.AIConfig(), true), "and is used again on Ling");
         // #22: Windows' voice saved for a language this PC has no voice for.
-        var system = new AppSettings { SpeakVoices = { ["en"] = "system" } };
-        var ling = new AppSettings().AIConfig();
+        var system = new AppSettings { AiProvider = "ling", SpeakVoices = { ["en"] = "system" } };
+        var ling = new AppSettings { AiProvider = "ling" }.AIConfig();
         Equal("system", VoiceCatalog.Chosen(system, "en", ling, true, windowsHasIt: true), "kept where Windows has it");
         Equal("ming:US_Emma", VoiceCatalog.Chosen(system, "en", ling, true, windowsHasIt: false), "the service's voice where it doesn't");
         Equal("ming:US_Emma", VoiceCatalog.Chosen(system, "en", ling, false, windowsHasIt: false), "even before the service is checked");
@@ -2925,7 +2925,7 @@ static class Tests
 
     public static void SendsTheOwnVoiceAsAReference()
     {
-        var ling = new AppSettings().AIConfig();
+        var ling = new AppSettings { AiProvider = "ling" }.AIConfig();
         var cloned = LingClient.SpeechBody(ling, "Hello", "US_Emma", "ja", ("data:audio/wav;base64,AAAA", "大家好"));
         var refs = cloned["references"]!.AsArray();
         Equal(1, refs.Count, "one reference");
@@ -2941,9 +2941,9 @@ static class Tests
 
     public static void OwnVoiceFallsBackWithoutItsRecordingOrLing()
     {
-        var ling = new AppSettings().AIConfig();
+        var ling = new AppSettings { AiProvider = "ling" }.AIConfig();
         var zen = new AppSettings { AiProvider = "zenmux" }.AIConfig();
-        var s = new AppSettings { SpeakVoices = { ["en"] = "clone" } };
+        var s = new AppSettings { AiProvider = "ling", SpeakVoices = { ["en"] = "clone" } };
         Equal("ming:US_Emma,ming:UK_George,ming:UK_Charlotte,system,clone", string.Join(",", VoiceCatalog.Options("en", ling, clone: true).Select(v => v.Id)), "offered last, once recorded");
         Check(!VoiceCatalog.Options("en", ling).Any(v => v.Id == "clone"), "not before");
         Equal("clone", VoiceCatalog.Chosen(s, "en", ling, true, clone: true), "used when recorded on Ling");
@@ -3047,13 +3047,13 @@ static class Tests
 
     public static async Task HearingGoesToTheChosenHearModel()
     {
-        Equal(12.0, Translator.HearTimeout(new AppSettings().AIConfig()), "Ming's timeout");
+        Equal(12.0, Translator.HearTimeout(new AppSettings { AiProvider = "ling" }.AIConfig()), "Ming's timeout");
         Equal(20.0, Translator.HearTimeout(new AppSettings { AiProvider = "zenmux" }.AIConfig()), "the others'");
         var old = LingClient.Spacing; LingClient.Spacing = 0;
         try
         {
             var fake = new Service((_, _) => Reply("LANG: en\nORIGINAL: We ship on Friday.\nTRANSLATION: 我们周五发布。"));
-            var (ling, _) = Using(fake, s: new AppSettings { AiHearModels = { ["zenmux"] = "bytedance/doubao-seed-2.0-mini" } });
+            var (ling, _) = Using(fake, s: new AppSettings { AiProvider = "ling", AiHearModels = { ["zenmux"] = "bytedance/doubao-seed-2.0-mini" } });
             var heard = await new Translator(ling).Hear(Wav.Bytes(Tone(1)), "zh-CN", null);
             Equal("我们周五发布。", heard?.Translation, "heard");
             Equal("bytedance/doubao-seed-2.0-mini", JsonNode.Parse(fake.Sent[0].body)!["model"]!.GetValue<string>(), "model");
@@ -3090,7 +3090,7 @@ static class Tests
         {
             var ling = Client(fake);
             var store = new SessionStore();
-            var engine = new ListenEngine(ling, new Translator(ling), store, new NotesEngine(ling, store), new AppSettings { Target = "zh-CN" });
+            var engine = new ListenEngine(ling, new Translator(ling), store, new NotesEngine(ling, store), new AppSettings { AiProvider = "ling", Target = "zh-CN" });
             engine.Changed += () => { lock (seen) seen.Add((engine.Problem, engine.ProblemStatus, Volatile.Read(ref calls))); };
             var path = Path.Combine(Path.GetTempPath(), $"cicada-502-{Environment.ProcessId}.wav");
             short[] stretches = [.. Tone(1), .. Silence(3), .. Tone(1), .. Silence(3), .. Tone(1), .. Silence(3), .. Tone(1), .. Silence(3)];
@@ -3471,7 +3471,7 @@ static class Tests
         var id = store.Begin(DateTimeOffset.Now.AddDays(-Random.Shared.Next(1, 100000))).Id;
         for (int i = 0; i < lines.Length; i++)
             store.Append(id, new TranscriptLine { Id = $"l{i}", T = i, Src = lines[i], SrcLang = "zh-CN", DstLang = "en" });
-        return (new LiveFixes(store, new Vocabulary(null), new AppSettings { FixMisheard = true, AskNames = true }), store, id);
+        return (new LiveFixes(store, new Vocabulary(null), new AppSettings { AiProvider = "ling", FixMisheard = true, AskNames = true }), store, id);
     }
 
     static TranscriptLine FixLine(SessionStore store, string id, string l) => store.Get(id)!.Lines.First(x => x.Id == l);
@@ -3556,7 +3556,7 @@ static class Tests
     public static void FixesOffLeavesLinesAsHeard()
     {
         var (fx, store, id) = FixSetup("但质压这种");
-        var off = new LiveFixes(store, fx.Vocabulary, new AppSettings { FixMisheard = false });
+        var off = new LiveFixes(store, fx.Vocabulary, new AppSettings { AiProvider = "ling", FixMisheard = false });
         Check(off.Context(id, "l0") is null, "no context: the request is the plain translation");
         off.Received(id, "l0", [new("质压", "质押", 0.9)]);
         Equal(null, FixLine(store, id, "l0").Fixes, "nothing fixed");
@@ -3579,7 +3579,7 @@ static class Tests
         {
             var ling = Client(fake);
             var store = new SessionStore();
-            var settings = new AppSettings { Target = "en" };
+            var settings = new AppSettings { AiProvider = "ling", Target = "en" };
             var engine = new ListenEngine(ling, new Translator(ling), store, new NotesEngine(ling, store), settings)
             {
                 Fixes = new LiveFixes(store, new Vocabulary(null), settings),
@@ -3888,7 +3888,7 @@ static class Tests
             store.Append(s.Id, new TranscriptLine { Id = "l1", Src = "Hello", SrcLang = "en", Dst = "你好", DstLang = "zh", T = 3 });
             store.End(s.Id, s.StartedAt.AddMinutes(30));
             store.Rename(s.Id, "周会");
-            var settings = new AppSettings();
+            var settings = new AppSettings { AiProvider = "ling" };
             var index = Path.Combine(dir, "FolderExport.json");
             var ex = new FolderExporter(store, settings, index) { Delay = TimeSpan.FromMilliseconds(20) };
             var stem = FolderExportFormat.Stem(store.Get(s.Id)!);
@@ -3939,7 +3939,7 @@ static class Tests
 
     public static void TalkKeyChoices()
     {
-        Equal("rcontrol", new AppSettings().TalkKey, "right Ctrl by default");
+        Equal("rcontrol", new AppSettings { AiProvider = "ling" }.TalkKey, "right Ctrl by default");
         Equal(0xA3, TalkKey.Named(null).Vk, "no name is right Ctrl");
         Equal(0xA3, TalkKey.Named("nonsense").Vk, "an unknown name is right Ctrl");
         Equal("f13", TalkKey.Choose(0x7C).Key?.Name, "F13 can be one");
@@ -3952,8 +3952,66 @@ static class Tests
         Check(TalkKey.All.Where(k => k.Modifier).All(k => k.Name.EndsWith("control") || k.Name.EndsWith("shift")), "only Ctrl and Shift pass through to other apps");
         Equal(TalkKey.All.Count, TalkKey.All.Select(k => k.Vk).Distinct().Count(), "one key per code");
         foreach (var k in TalkKey.All) Equal(k, TalkKey.Named(k.Name), $"{k.Name} round-trips");
-        var s = Json.Read<AppSettings>(Json.Write(new AppSettings { TalkKey = "f13" }))!;
+        var s = Json.Read<AppSettings>(Json.Write(new AppSettings { AiProvider = "ling", TalkKey = "f13" }))!;
         Equal("f13", s.TalkKey, "kept in settings");
         Equal("rcontrol", Json.Read<AppSettings>("{}")!.TalkKey, "settings from before it are right Ctrl");
+    }
+
+    // MARK: Snart
+
+    public static void SnartDefaultsToClaudeOnOpenRouter()
+    {
+        Equal("openrouter", AIProvider.Named(null).Id, "a service never named");
+        Equal("openrouter,openai,custom", string.Join(",", AIProvider.All.Select(p => p.Id)), "the menu");
+        Equal("anthropic/claude-haiku-5.5", new AppSettings().AIConfig().TextModel, "fastest Claude first");
+        Equal("en,fr,it,de,ta", string.Join(",", Languages.Sources.Select(l => l.Code)), "the five");
+        Equal("ta", Languages.Base("ta-IN"), "base code");
+    }
+
+    public static void SetLanguagesKeepsThePairInStep()
+    {
+        var s = new AppSettings();
+        s.SetLanguages("ta", "de");
+        Equal(("ta", "ta", "de", "de"), (s.SpeakFrom, s.Target, s.Theirs, s.SpeakTo), "mine, subtitles, theirs, the room");
+        Equal("ta", s.Mine, "mine");
+    }
+
+    public static void ElevenLabsRepliesAreRead()
+    {
+        Equal("Bonjour", ElevenLabsClient.ParseText("{\"text\":\" Bonjour \",\"language_code\":\"fra\"}"), "text");
+        Equal(null, ElevenLabsClient.ParseText("not json"), "not json");
+        Equal(null, ElevenLabsClient.ParseText("{\"detail\":\"quota\"}"), "no text");
+        Equal("ta", ElevenLabsClient.Code("ta-IN"), "ISO 639-1");
+    }
+
+    sealed class ElevenFake(Func<string, HttpResponseMessage> respond) : HttpMessageHandler
+    {
+        public readonly List<string> Bodies = [];
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancel)
+        {
+            var body = request.Content is null ? "" : await request.Content.ReadAsStringAsync(cancel);
+            lock (Bodies) Bodies.Add(request.RequestUri!.AbsolutePath + "\n" + body);
+            return respond(body);
+        }
+    }
+
+    public static async Task ScribeHearsThenTheTextIsTranslated()
+    {
+        var stt = new ElevenFake(_ => new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{\"text\":\"Bonjour Mugesh\"}") });
+        var ling = Client(new Fake(_ => Reply("Hello Mugesh")));
+        var t = new Translator(ling, new Fake(_ => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)))
+        {
+            Eleven = new ElevenLabsClient(() => "sk_test", () => "voice", stt),
+        };
+        var heard = await t.Hear(Wav.Bytes(new short[16000]), "en", "fr");
+        Equal("fr", heard?.Lang, "the pair's language");
+        Equal("Bonjour Mugesh", heard?.Original, "what Scribe heard");
+        Equal("Hello Mugesh", heard?.Translation, "translated");
+        Check(stt.Bodies.Single().StartsWith("/v1/speech-to-text"), "Scribe asked");
+        Check(stt.Bodies.Single().Contains("name=language_code") && stt.Bodies.Single().Contains("\r\n\r\nfr\r\n"), "listens for French: " + stt.Bodies.Single()[..200]);
+
+        var none = new ElevenFake(_ => new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{\"text\":\"\"}") });
+        t.Eleven = new ElevenLabsClient(() => "sk_test", () => "voice", none);
+        Equal(null, await t.Hear(Wav.Bytes(new short[16000]), "en", "fr"), "no speech: no line");
     }
 }

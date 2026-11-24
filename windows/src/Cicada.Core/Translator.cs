@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 using System.Text.Json;
 
 namespace Cicada;
@@ -12,6 +14,9 @@ public sealed record Heard(string Lang, string Original, string? Translation);
 /// one that sees drafts.
 public sealed class Translator(LingClient ling, HttpMessageHandler? google = null)
 {
+    /// Snart: hears with ElevenLabs Scribe when its key is saved (set by the app).
+    public ElevenLabsClient? Eleven { get; set; }
+
     static readonly HttpClient Shared = MakeHttp(null);
     // Tests hand in their own handler, so they never reach the real Google.
     readonly HttpClient Http = google is null ? Shared : MakeHttp(google);
@@ -69,6 +74,18 @@ public sealed class Translator(LingClient ling, HttpMessageHandler? google = nul
     {
         // 16 kHz mono 16-bit after the 44-byte header: the length caps the reply and catches a runaway one.
         var seconds = Math.Max(0, wav.Length - 44) / 32000.0;
+        // Snart: ElevenLabs Scribe hears, in the language the pair says is spoken, and the text
+        // translator turns it into the other one (the Mac hears on the Mac, then translates).
+        if (Eleven is { CanHear: true } eleven && hint is not null)
+        {
+            var text = await eleven.Transcribe(wav, hint, cancel);
+            if (string.IsNullOrWhiteSpace(text) || IsNoise(text, seconds)) return null;
+            if (Languages.Base(hint) == Languages.Base(target)) return new Heard(hint, text, text);
+            // A busy service (429) left a line untranslated: one more go a moment later.
+            var translation = await Translate(text, hint, target, Kind.Sentence, priority);
+            if (translation is null) { await Task.Delay(800, cancel); translation = await Translate(text, hint, target, Kind.Sentence, priority); }
+            return new Heard(hint, text, translation);
+        }
         var prompt = HearPrompt(target, hint, Glossary());
         var config = ling.Config;
         var reply = await ling.Chat(prompt, HearInstruction(target), priority, maxTokens: HearTokens(seconds), timeout: HearTimeout(config),

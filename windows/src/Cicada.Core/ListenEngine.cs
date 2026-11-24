@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 using System.Threading.Channels;
 
 namespace Cicada;
@@ -48,6 +50,8 @@ public sealed class ListenEngine
     public string? SessionId { get; private set; }
     /// The meeting's language so far (null until Ming has heard something).
     public string? Spoken => hint;
+    /// The language the other side speaks, when the user chose it (Snart's pair).
+    public Func<string?>? Pinned { get; set; }
     /// Segments sent and not yet back: the UI shows "…" while this is above zero.
     public int Pending { get { lock (gate) return segments.Count; } }
     /// The last error worth showing ("key 无效", "网络不通"), cleared by the next good reply.
@@ -200,7 +204,8 @@ public sealed class ListenEngine
         {
             done.Clear(); segments.Clear(); inFlight.Clear(); prints.Clear(); clusterer = new(); emitted.Clear();
             nextToDeliver = 1; lineCount = RoomSide ? RoomIDs : 0; last = null; lastEnd = 0;
-            hint = null; candidate = null; candidateVotes = 0; Problem = null; serverErrors = 0;
+            // Snart: the pair says what is spoken; Scribe listens for that from the first stretch.
+            hint = Pinned?.Invoke(); candidate = null; candidateVotes = 0; Problem = null; serverErrors = 0;
         }
         offset = at;
         segmenter = new Segmenter(room ? new VoiceGate() : null);

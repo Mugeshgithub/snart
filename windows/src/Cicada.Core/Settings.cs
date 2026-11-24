@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 using System.Globalization;
 using System.Text.Json.Serialization;
 
@@ -14,7 +16,7 @@ public sealed class AppSettings
     [JsonPropertyName("model")] public string Model { get; set; } = LingClient.DefaultModel;
     /// AI 服务 (the Mac's keys): the service, and per service the models chosen over its recommended
     /// ones. aiHearModels is the ports' own: what hears the audio (Ming on Ling).
-    [JsonPropertyName("aiProvider")] public string AiProvider { get; set; } = "ling";
+    [JsonPropertyName("aiProvider")] public string AiProvider { get; set; } = "openrouter";
     [JsonPropertyName("aiModels")] public Dictionary<string, string> AiModels { get; set; } = [];
     [JsonPropertyName("aiHearModels")] public Dictionary<string, string> AiHearModels { get; set; } = [];
     [JsonPropertyName("aiVoiceModels")] public Dictionary<string, string> AiVoiceModels { get; set; } = [];
@@ -73,6 +75,11 @@ public sealed class AppSettings
     [JsonPropertyName("speakFrom")] public string SpeakFrom { get; set; } = "system";
     /// 对方听到的语言: "room" (what the other side speaks) or a target code.
     [JsonPropertyName("speakTo")] public string SpeakTo { get; set; } = "room";
+    /// Snart's pair: what the other side speaks (Scribe listens for it). Yours is SpeakFrom, and
+    /// subtitles go into it (Target); SetLanguages keeps the three in step.
+    [JsonPropertyName("theirs")] public string Theirs { get; set; } = "fr";
+    /// The ElevenLabs voice id of the user's clone (the key is its own sealed file).
+    [JsonPropertyName("elevenVoice")] public string ElevenVoice { get; set; } = "";
     /// The voice for each language the room hears ("en" → "ming:US_Emma", or "system").
     [JsonPropertyName("speakVoices")] public Dictionary<string, string> SpeakVoices { get; set; } = [];
     /// The one-time "知了还在听" notice after the panel is first collapsed while listening.
@@ -89,6 +96,13 @@ public sealed class AppSettings
     /// The startup notification that VB-Cable holds the speaker was shown (CableDefaults.ShouldNotify);
     /// cleared when a real speaker is back.
     [JsonPropertyName("cableSpeakerNotified")] public bool CableSpeakerNotified { get; set; }
+
+    /// Yours and theirs at once, as the bubble's EN ⇄ FR chip sets them.
+    public void SetLanguages(string mine, string theirs)
+    {
+        SpeakFrom = mine; Target = mine; Theirs = theirs; SpeakTo = theirs;
+    }
+    [JsonIgnore] public string Mine => SpeakFrom == "system" ? Languages.FromSystem(CultureInfo.CurrentUICulture.Name) : SpeakFrom;
 
     [JsonIgnore] public string TargetCode => Target == "system" ? Languages.FromSystem(CultureInfo.CurrentUICulture.Name) : Target;
     /// The AI service in use, its address and models (what LingClient calls with).

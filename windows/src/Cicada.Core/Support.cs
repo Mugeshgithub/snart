@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 using System.Text;
 using System.Globalization;
 
@@ -49,17 +51,16 @@ public sealed record Lang(string Name, string Code);
 /// The languages the Mac app offers (Languages.swift), as translation codes.
 public static class Languages
 {
+    /// Snart's five, any two of them: what they speak and what you read and speak.
     public static readonly Lang[] Sources =
     [
-        new("English", "en"), new("日本語", "ja"), new("中文", "zh-CN"), new("한국어", "ko"),
-        new("Español", "es"), new("Français", "fr"), new("Deutsch", "de"), new("Português", "pt"),
+        new("English", "en"), new("French", "fr"), new("Italian", "it"), new("German", "de"), new("Tamil", "ta"),
     ];
 
-    public static readonly Lang[] Targets =
-    [
-        new("简体中文", "zh-CN"), new("繁體中文", "zh-TW"), new("English", "en"), new("日本語", "ja"),
-        new("한국어", "ko"), new("Español", "es"), new("Français", "fr"), new("Deutsch", "de"), new("Português", "pt"),
-    ];
+    public static readonly Lang[] Targets = Sources;
+
+    /// "fr-FR", "ta_IN" → "fr", "ta".
+    public static string Base(string code) => code.Split('-', '_')[0].ToLowerInvariant();
 
     /// "Simplified Chinese", "Japanese": the names prompts use.
     public static string EnglishName(string code) => code switch

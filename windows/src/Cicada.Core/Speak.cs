@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 using System.Globalization;
 using System.Security.Cryptography;
 
@@ -250,6 +252,9 @@ public sealed class SpeakEngine
         store.Append(m.id, line);
     }
 
+    /// Snart: the ElevenLabs clone, when its key and voice are saved (set by the app).
+    public ElevenLabsClient? Eleven { get; set; }
+
     /// The user's recording for their own voice; null in tests that don't need it.
     public VoiceReference? Reference { get; set; }
 
@@ -264,6 +269,21 @@ public sealed class SpeakEngine
     /// Windows'. True once some sound went out.
     public async Task<bool> Voice(string text, string language, ISpeechSink sink)
     {
+        // Snart: the user's ElevenLabs clone speaks every language.
+        if (Eleven is { CanSpeak: true } eleven)
+        {
+            int pieces = 0;
+            try
+            {
+                await foreach (var pcm in eleven.Speech(text))
+                {
+                    if (pieces++ == 0) sink.Begin(24000);
+                    sink.Write(pcm);
+                }
+            }
+            catch (LingException e) { Log.Debug($"speak: elevenlabs failed {e.Message}"); }
+            if (pieces > 0) { await sink.End(); LastVoice = "elevenlabs"; return true; }
+        }
         var config = ling.Config;
         var id = ChosenVoice(language);
         var prefix = config.IsLing ? VoiceCatalog.MingPrefix : VoiceCatalog.CloudPrefix;

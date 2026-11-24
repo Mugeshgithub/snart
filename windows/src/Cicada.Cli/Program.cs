@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 // cicada-cli: the Windows engines without Windows.
 //
 //   cicada-cli listen <file.wav> [--target zh-CN] [--speed 1|0] [--notes]
@@ -28,9 +30,14 @@ var cliSettings = new AppSettings { Target = Opt("--target", "zh-CN"), AiProvide
 if (Opt("--hear", "") is { Length: > 0 } hearModel) cliSettings.AiHearModels[provider] = hearModel;
 if (Opt("--text", "") is { Length: > 0 } textModel) cliSettings.AiModels[provider] = textModel;
 var keyFile = Environment.GetEnvironmentVariable("CICADA_KEY_FILE")
-    ?? new[] { "LiveSubs Dev", "LiveSubs" }.Select(d => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library/Application Support", d,
+    ?? new[] { "Snart", "LiveSubs Dev", "LiveSubs" }.Select(d => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library/Application Support", d,
         provider == "ling" ? "ling-api-key" : "ai-key-" + provider)).FirstOrDefault(File.Exists);
 LingClient Client() => new(new AIKey(new PlainProtector(), keyFile), config: cliSettings.AIConfig);
+// Snart: --theirs <code> pins what the other side speaks and hears it with ElevenLabs Scribe; the
+// key is the Mac app's (Snart) ElevenLabs key file, --voice-id the clone that speaks.
+var elevenFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library/Application Support/Snart/ai-key-elevenlabs");
+ElevenLabsClient Eleven() => new(() => File.Exists(elevenFile) ? File.ReadAllText(elevenFile) : null, () => Opt("--voice-id", ""));
+var theirs = Opt("--theirs", "");
 
 switch (args_[0])
 {
@@ -137,7 +144,8 @@ switch (args_[0])
         Console.WriteLine($"{provider}: hear {ling.Config.HearModel}, text {ling.Config.TextModel}");
         var store = new SessionStore();
         var notes = new NotesEngine(ling, store);
-        var engine = new ListenEngine(ling, new Translator(ling) { GoogleOff = settings.GoogleOff }, store, notes, settings);
+        var engine = new ListenEngine(ling, new Translator(ling) { GoogleOff = settings.GoogleOff, Eleven = theirs.Length > 0 ? Eleven() : null }, store, notes, settings);
+        if (theirs.Length > 0) engine.Pinned = () => theirs;
         var roomFile = Opt("--room", "");
         var roomOnly = args_.Contains("--room-only");
         var roomEngine = roomFile.Length > 0 && !roomOnly ? new ListenEngine(ling, new Translator(ling) { GoogleOff = settings.GoogleOff }, store, notes, settings, roomSide: true) : null;

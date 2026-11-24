@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
@@ -31,10 +33,15 @@ public sealed record AIProvider(string Id, string Name, string? Base, string? Si
         [new("Ling-3.1-flash", "更准"), new("Ling-3.0-flash", "更快、更省")], [new("Ming-3.0-audio-flash")], [new("Ming-3.0-tts-0.5B")], [],
         Clones: true, Spacing: 0.6);
 
+    // Snart: Claude through OpenRouter by default, Haiku first so live lines and your sentences
+    // come back in about a second (the Mac keeps Opus for notes; here one model does both).
     public static readonly AIProvider OpenRouter = new("openrouter", "OpenRouter", "https://openrouter.ai/api/v1/", "https://openrouter.ai/settings/keys",
-        [new("inclusionai/ling-3.1-flash", "和 Ling 同款"), new("qwen/qwen3.8-flash", "中文好")],
-        [new("qwen/qwen3.8-omni-flash", "没人说话时不乱写"), new("google/gemini-3.1-flash-lite", "最快，偶尔把杂音写成字")],
-        [new("google/gemini-3.8-flash-tts", "效果和价格最均衡"), new("google/gemini-3.8-flash-lite-tts", "更省")], Gemini);
+        [new("anthropic/claude-haiku-5.5", "Fastest"), new("anthropic/claude-opus-5.5", "Most accurate, slower")],
+        [new("qwen/qwen3.8-omni-flash", "Writes nothing when no one speaks"), new("google/gemini-3.1-flash-lite", "Fastest, now and then writes noise as words")],
+        [new("google/gemini-3.8-flash-tts", "Best balance"), new("google/gemini-3.8-flash-lite-tts", "Cheaper")], Gemini);
+
+    public static readonly AIProvider OpenAI = new("openai", "OpenAI", "https://api.openai.com/v1/", "https://platform.openai.com/api-keys",
+        [new("gpt-5.4-nano", "Good enough, cheaper")], [new("gpt-audio-mini")], [], []);
 
     public static readonly AIProvider ZenMux = new("zenmux", "ZenMux", "https://zenmux.ai/api/v1/", "https://zenmux.ai/settings/keys",
         [new("inclusionai/ling-3.0-flash", "和 Ling 同款"), new("qwen/qwen3.8-flash", "中文好")],
@@ -43,12 +50,14 @@ public sealed record AIProvider(string Id, string Name, string? Base, string? Si
 
     /// Any OpenAI-compatible address (a company gateway, Ollama…). Its hear model must take audio
     /// in; voices only when the user names a speech model, else Windows speaks.
-    public static readonly AIProvider Custom = new("custom", "其他（兼容 OpenAI）", null, null, [], [], [], []);
+    public static readonly AIProvider Custom = new("custom", "Other (OpenAI-compatible)", null, null, [], [], [], []);
 
-    public static readonly AIProvider[] All = [Ling, OpenRouter, ZenMux, Custom];
+    /// The menu (Snart): Ling and ZenMux stay in the code, not offered.
+    public static readonly AIProvider[] All = [OpenRouter, OpenAI, Custom];
+    static readonly AIProvider[] Known = [OpenRouter, OpenAI, Custom, Ling, ZenMux];
 
-    /// A service never named (or OpenAI, which the ports don't offer) is Ling.
-    public static AIProvider Named(string? id) => All.FirstOrDefault(p => p.Id == id) ?? Ling;
+    /// A service never named is OpenRouter (Snart).
+    public static AIProvider Named(string? id) => Known.FirstOrDefault(p => p.Id == id) ?? OpenRouter;
 
     /// This computer: a key isn't needed.
     public static bool IsLocal(string hostOrUrl) => Host(hostOrUrl) is "localhost" or "127.0.0.1" or "::1";
