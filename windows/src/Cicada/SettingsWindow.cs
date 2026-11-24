@@ -36,8 +36,8 @@ sealed partial class SettingsWindow : Window
     public SettingsWindow(Controller app)
     {
         this.app = app;
-        Title = L("设置") + " · " + L("知了");
-        Width = 1000; Height = Math.Min(780, SystemParameters.WorkArea.Height - 24); MinWidth = 760; MinHeight = 480;
+        Title = "Settings · Snart";
+        Width = 900; Height = Math.Min(680, SystemParameters.WorkArea.Height - 24); MinWidth = 760; MinHeight = 480;
         Background = Palette.Page; FontFamily = Palette.Font; Icon = AppIcon.Image;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         System.Windows.Automation.AutomationProperties.SetName(keyBox, L("API key"));
@@ -48,7 +48,13 @@ sealed partial class SettingsWindow : Window
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(200) });
         grid.ColumnDefinitions.Add(new ColumnDefinition());
         Grid.SetColumn(scroll, 1);
-        grid.Children.Add(nav); grid.Children.Add(scroll);
+        // The Mac's sidebar: the four pages, and Snart's badge at the bottom.
+        var side = new DockPanel();
+        var badge = Badge();
+        DockPanel.SetDock(badge, Dock.Bottom);
+        side.Children.Add(badge);
+        side.Children.Add(nav);
+        grid.Children.Add(side); grid.Children.Add(scroll);
         Content = Ui.Frameless(this, grid);
         scroll.ScrollChanged += (_, e) => { if (e.ViewportWidthChange != 0 && scroll.Content is FrameworkElement p) p.Width = PageWidth(); };
         app.Ling.Changed += OnLingChanged;
@@ -78,13 +84,13 @@ sealed partial class SettingsWindow : Window
         var size = new Slider { Minimum = 18, Maximum = 32, Value = app.Settings.SubtitleSize, Width = 200, IsSnapToTickEnabled = true, TickFrequency = 1, VerticalAlignment = VerticalAlignment.Center };
         System.Windows.Automation.AutomationProperties.SetName(size, L("字幕文字大小"));
         size.ValueChanged += (_, e) => { app.Settings.SubtitleSize = (int)e.NewValue; Save(); };
-        Section(page, "listen", L("听的时候"), Group(
+        Section(page, "listen", "While listening", Group(
             Card(Icons.Subtitles, L("听的时候显示"), null, Ui.Segmented([("bubble", "Bubble"), ("notes", L("纪要")), ("subtitles", L("字幕条"))], app.Settings.View, app.SetView)),
             Card(null, L("字幕文字大小"), null, size),
             Card(Icons.Keyboard, L("开始或结束"), app.HotkeyRegistered ? L("在任何程序里都能按") : L("这个快捷键被别的程序占用了"), Keys(Hotkey.Label))));
-        Section(page, "speak", L("同声传译"), SpeakCards().ToArray());
-        Section(page, "end", L("结束会议"), EndCards());
-        Section(page, "privacy", L("隐私与启动"), [Group(
+        Section(page, "speak", "Speaking", SpeakCards().ToArray());
+        Section(page, "end", "End meeting", EndCards());
+        Section(page, "privacy", "Privacy and startup", [Group(
             Card(Icons.Eye, L("共享屏幕时让对方看到"), L("关着时，截图和屏幕共享里看不到纪要和字幕"), Ui.Switch(app.Settings.ShowInCapture, app.SetShowInCapture, L("共享屏幕时让对方看到"))),
             Card(Icons.List, L("说话人识别"), L("按声音标出说话人 1、2…，只在这台电脑上处理"), Ui.Switch(app.Settings.SpeakerVoices, v => { app.Settings.SpeakerVoices = v; Save(); }, L("说话人识别"))),
             Card(Icons.Wave, L("保存会议录音"), L("只存在这台电脑上"), Ui.Switch(app.Settings.RecordAudio, v => { app.Settings.RecordAudio = v; Save(); }, L("保存会议录音"))),
@@ -101,7 +107,7 @@ sealed partial class SettingsWindow : Window
             Card(null, L("日志"), null, Ui.LinkText(L("打开日志"), () => OpenFolder(Path.GetDirectoryName(Paths.Log)!))),
             .. (!Paths.Dev && File.Exists(Install.Exe) ? new[] { Card(null, L("卸载知了"), L("会议记录默认留着"), Ui.LinkText(L("卸载…"), () => Install.Launch("--uninstall"))) } : []),
         ];
-        Section(page, "about", L("关于"), Group(about),
+        Section(page, "about", "About", Group(about),
             Credit());
         scroll.Content = page;
         scroll.ScrollToVerticalOffset(shownPage == current ? offset : 0);
@@ -118,6 +124,24 @@ sealed partial class SettingsWindow : Window
     /// What to do with the download: the installer upgrades itself; an older release has only the zip.
     public static string UpdateHint(UpdateChecker.Update u) => u.Setup is not null ? L("安装后自动重新打开") : L("下载后解压，替换旧的知了");
 
+    /// Who this is, as the Mac's sidebar badge: the mark, the name and version, by CognivexAI, and
+    /// the project it is built on.
+    static FrameworkElement Badge()
+    {
+        var version = new Border { Background = Palette.AccentPale, CornerRadius = new CornerRadius(8), Padding = new Thickness(6, 1, 6, 1), Child = Ui.Text("v" + Controller.Version, 10.5, Palette.AccentText, FontWeights.SemiBold, wrap: false) };
+        var cicada = Ui.LinkText("Built on Cicada (open source)", () => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://github.com/wquguru/cicada") { UseShellExecute = true }));
+        cicada.FontSize = 11; cicada.Foreground = Palette.Secondary;
+        if (cicada is TextBlock tb) { tb.TextWrapping = TextWrapping.Wrap; tb.MaxWidth = 130; }
+        var text = Ui.Stack(1, Ui.Row(6, Ui.Text("Snart", 13, Palette.Ink, FontWeights.SemiBold, wrap: false), version),
+            Ui.Text("by CognivexAI", 11, Palette.Secondary, wrap: false), cicada);
+        return new Border
+        {
+            Margin = new Thickness(12, 0, 12, 14), Padding = new Thickness(10, 8, 10, 8), CornerRadius = new CornerRadius(14),
+            Background = new SolidColorBrush(Color.FromArgb(0x99, 0xFF, 0xFF, 0xFF)), BorderBrush = new SolidColorBrush(Color.FromArgb(0xF2, 0xFF, 0xFF, 0xFF)), BorderThickness = new Thickness(0.8),
+            Child = Ui.Row(8, AppIcon.Small(24), text),
+        };
+    }
+
     static FrameworkElement Credit() { var t = Ui.Helper(L("说话人识别用 WeSpeaker 的声纹模型（CC BY 4.0）")); t.Margin = new Thickness(6, 0, 0, 0); return t; }
 
     /// Opens one category's page (the debug pipe's `show settings about`; `ai models` unfolds
@@ -125,7 +149,7 @@ sealed partial class SettingsWindow : Window
     public void Show(string id)
     {
         var parts = id.Split(' ');
-        current = parts[0] == "ling" ? "ai" : parts[0];
+        current = PageOf(parts[0] == "ling" ? "ai" : parts[0]);
         if (current == "ai") modelsOpen = parts.Contains("models");
         Render();
     }
@@ -162,10 +186,10 @@ sealed partial class SettingsWindow : Window
     void Nav()
     {
         nav.Children.Clear();
+        // Snart: the Mac's four pages.
         (string id, string icon, string label)[] items =
         [
-            ("ai", Icons.Key, L("AI 服务")), ("lang", Icons.Globe, L("语言")), ("words", Icons.List, L("词表")), ("listen", Icons.Wave, L("听的时候")),
-            ("speak", Icons.Mic, L("同声传译")), ("end", Icons.Stop, L("结束会议")), ("privacy", Icons.Shield, L("隐私与启动")), ("about", Icons.Info, L("关于")),
+            ("ai", Icons.Key, "AI Service"), ("voice", Icons.Mic, "Voice"), ("words", Icons.List, "Word list"), ("general", Icons.Gear, "General"),
         ];
         foreach (var (id, icon, label) in items)
         {
@@ -203,11 +227,29 @@ sealed partial class SettingsWindow : Window
 
     /// One category's page: only the chosen one is shown, under its name in big type (and, for
     /// 同声传译, its on/off switch beside it).
+    /// Snart's pages hold Cicada's sections: Voice is the pair and speaking; General is the rest.
+    static string PageOf(string id) => id switch
+    {
+        "lang" or "speak" or "voice" => "voice",
+        "listen" or "end" or "privacy" or "about" or "general" => "general",
+        _ => id,
+    };
+
+    static string PageTitle(string page) => page switch { "ai" => "AI Service", "voice" => "Voice", "words" => "Word list", _ => "General" };
+
     void Section(StackPanel page, string id, string title, params FrameworkElement[] groups)
     {
-        if (id != current) return;
-        FrameworkElement h = Ui.Text(title, 28, Palette.Ink, FontWeights.Bold);
-        if (id == "speak") h = Ui.Spread(h, Ui.Switch(app.Settings.Speak, v => { app.Settings.Speak = v; Save(); }, L("同声传译")));
+        if (PageOf(id) != current) return;
+        // The page's first section carries the page's name; the others a smaller heading.
+        var first = page.Children.Count == 0;
+        FrameworkElement h;
+        if (first && id is "ai" or "lang" or "words") h = Ui.Text(PageTitle(current), 28, Palette.Ink, FontWeights.Bold);
+        else
+        {
+            if (first) { var t = Ui.Text(PageTitle(current), 28, Palette.Ink, FontWeights.Bold); t.Margin = new Thickness(0, 0, 0, 20); page.Children.Add(t); }
+            h = Ui.Text(title, 15, Palette.Ink, FontWeights.SemiBold);
+        }
+        if (id == "speak") h = Ui.Spread(h, Ui.Switch(app.Settings.Speak, v => { app.Settings.Speak = v; Save(); }, "Speak into the call"));
         // The service menu in the page's header, Ling first and recommended.
         if (id == "ai") h = Ui.Spread(h, Ui.Choice(AIProvider.All.Select(p => (p.Id, p.Id == "ling" ? "Ling" + L("（推荐）") : L(p.Name))), app.Settings.AiProvider,
             v => { editingKey = false; editingNotesKey = false; notesKeyBox.Clear(); typing = null; keyHint = null; customFields.Clear(); open = null; app.SetAIProvider(v); }, 220));
@@ -315,7 +357,6 @@ sealed partial class SettingsWindow : Window
             : Ui.Row(10, Ui.Keycap(PushToTalk.Label, big: true), Ui.Button(L("更改"), StartChoosingKey, height: 32));
         var keyHelp = choosingKey ? L(keyRefused ?? "Esc 取消")
             : TalkKey.Note(key) is { } n ? L(n) : LF("按住%@说话，线上的人听到的是翻译后的声音", PushToTalk.Label);
-        yield return Label(L("说话"));
         yield return Group(
             Card(null, L("按住说话"), keyHelp, keyControl),
             Card(null, "Hands-free", "No key: it speaks for you after a short pause. Best with headphones.",

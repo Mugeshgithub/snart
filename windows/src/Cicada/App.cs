@@ -219,7 +219,8 @@ sealed class Controller
         if (AutoStart.Enabled) AutoStart.Refresh();
         // The Mac shows its main window when opened by hand; a Windows user who double-clicks the
         // exe expects a window too, not just a tray icon. Not set up yet: the onboarding on top.
-        if (!Background || !Settings.Onboarded) ShowRecords();
+        // Snart: no big window at startup, as on the Mac: the setup card when new, else the bubble.
+        if (Settings.Onboarded && !Background) ShowNotes();
         if (!Settings.Onboarded)
         {
             var later = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
@@ -300,7 +301,8 @@ sealed class Controller
         // the panel would cover the notes). Right click: the menu, any time.
         tray.MouseUp += (_, e) =>
         {
-            if (e.Button == Forms.MouseButtons.Left) Dispatch.BeginInvoke(() => { if (Listen.Listening && Settings.View == "notes") ToggleNotes(); else ShowFlyout(); });
+            // Snart: a click shows or hides the bubble, as the Mac's menu bar icon does.
+            if (e.Button == Forms.MouseButtons.Left) Dispatch.BeginInvoke(() => { if (Settings.View == "bubble" || (Listen.Listening && Settings.View == "notes")) ToggleNotes(); else ShowFlyout(); });
             else if (e.Button == Forms.MouseButtons.Right) Dispatch.BeginInvoke(ShowMenu);
         };
         // Cleared before the run: a click may show the next notification, with its own action.
@@ -403,17 +405,14 @@ sealed class Controller
             if (Settings.View == "notes") menu.Items.Add(NotesVisible ? Item(L("隐藏纪要窗"), ToggleNotes) : Item(L("显示纪要"), ShowNotes));
         }
         else menu.Items.Add(Item(L("开始听"), () => _ = ToggleListening(), Hotkey.Label.Replace('+', ' ')));
-        // 麦克风: one checkable item for what 听哪里's three were.
-        var micItem = Item(L("麦克风"), () => SetMic(!MicOn));
-        micItem.IsCheckable = true; micItem.IsChecked = MicOn;
-        menu.Items.Add(micItem);
-        menu.Items.Add(Settings.View == "subtitles" ? Item(L("换成纪要"), () => SetView("notes")) : Item(L("换成字幕条"), () => SetView("subtitles")));
+        // Snart: the Mac's menu (Show bubble, Start, Settings, Setup, Past meetings, Quit).
+        if (Settings.View == "bubble") menu.Items.Add(NotesVisible ? Item("Hide bubble", ToggleNotes) : Item("Show bubble", ShowNotes));
         menu.Items.Add(new Separator());
-        if (Updates.Available is { } update) menu.Items.Add(Item(LF("有新版本 %@", update.Version), InstallUpdate, ink: Palette.AccentText));
-        menu.Items.Add(Item(L("会议记录"), () => ShowRecords()));
         menu.Items.Add(Item(L("设置"), ShowSettings));
+        menu.Items.Add(Item("Setup", () => ShowOnboarding()));
+        menu.Items.Add(Item("Past meetings", () => ShowRecords()));
         menu.Items.Add(new Separator());
-        menu.Items.Add(Item(L("退出知了"), () => _ = Quit()));
+        menu.Items.Add(Item("Quit Snart", () => _ = Quit()));
         menu.Closed += (_, _) => menuHost.Hide();
         menu.IsOpen = true;
     }
@@ -1158,19 +1157,19 @@ sealed class Controller
     }
 
     /// The onboarding, at `step` or at the first step not done; one window at a time.
+    SnartSetup? setup;
+
+    /// Snart's setup card (SnartSetup), as on the Mac; `step` 1-based like the Mac's.
     public void ShowOnboarding(int? step = null)
     {
-        var (k, a, _) = SetupDone;
-        var at = step ?? (!k ? 0 : !a ? 1 : 2);
-        if (onboarding is null)
+        if (setup is null)
         {
-            onboarding = new Onboarding(this, installed: Arrived == "--installed");
-            onboarding.Closed += (_, _) => { onboarding = null; Changed(); };
-            if (mainWindow?.IsVisible == true) { onboarding.Owner = mainWindow; onboarding.WindowStartupLocation = WindowStartupLocation.CenterOwner; }
+            setup = new SnartSetup(this, finished: ShowNotes);
+            setup.Closed += (_, _) => { setup = null; Changed(); };
         }
-        onboarding.At(at);
-        onboarding.Show();
-        onboarding.Activate();
+        if (step is { } n) setup.Go(n - 1);
+        setup.Show();
+        setup.Activate();
     }
 
     public void SetupChanged() => Changed();

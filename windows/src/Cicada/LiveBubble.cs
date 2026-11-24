@@ -15,7 +15,9 @@ sealed class LiveBubble : Window
     readonly Controller app;
     readonly DispatcherTimer clock = new() { Interval = TimeSpan.FromSeconds(1) };
     readonly TextBlock clockText = Ui.Text("", 12, Palette.Secondary, wrap: false);
-    readonly ContentControl body = new(), talk = new(), chip = new(), mode = new();
+    /// The red dot only while a meeting is being heard.
+    readonly FrameworkElement liveDot = Ui.LiveDot(7);
+    readonly ContentControl body = new(), talk = new(), chip = new(), mode = new(), end = new();
     bool notes, renderQueued;
 
     static readonly SolidColorBrush Brand = new(Color.FromRgb(0x2F, 0x62, 0xE0));
@@ -53,7 +55,7 @@ sealed class LiveBubble : Window
         DockPanel.SetDock(left, Dock.Left);
         head.Children.Add(left);
         var right = Ui.Row(2,
-            Ui.Row(6, Ui.LiveDot(7), clockText),
+            Ui.Row(6, liveDot, clockText),
             Ui.IconButton(Icons.Notes, "Notes", () => { notes = !notes; Render(); }, Palette.Secondary, 30, 15),
             Ui.IconButton(Icons.Gear, "Settings", app.ShowSettings, Palette.Secondary, 30, 15),
             Ui.IconButton(Icons.Close, "Hide", Hide, Palette.Secondary, 30, 14));
@@ -61,9 +63,9 @@ sealed class LiveBubble : Window
         head.Children.Add(right);
 
         var foot = new DockPanel { Margin = new Thickness(12, 4, 12, 12) };
-        var stop = Ui.IconButton(Icons.Stop, "End meeting", () => { if (app.Listen.Listening) app.RequestStop(); else _ = app.ToggleListening(); }, Palette.Ink, 36, 14, fill: true);
-        DockPanel.SetDock(stop, Dock.Right);
-        foot.Children.Add(stop);
+        // End the meeting while listening; start one when not (as the Mac's bubble).
+        DockPanel.SetDock(end, Dock.Right);
+        foot.Children.Add(end);
         // Hold the key, or hands-free: one click switches, as the Mac's ⌥ / 〰.
         DockPanel.SetDock(mode, Dock.Left);
         mode.Margin = new Thickness(0, 0, 6, 0);
@@ -93,6 +95,7 @@ sealed class LiveBubble : Window
     {
         var s = app.Listen.SessionId is { } id ? app.Store.Get(id) : null;
         clockText.Text = app.Listen.Listening && s is not null ? Languages.Clock((DateTimeOffset.Now - s.StartedAt).TotalSeconds) : "";
+        liveDot.Visibility = app.Listen.Listening ? Visibility.Visible : Visibility.Collapsed;
     }
 
     static string Short(string code) => Languages.Base(code).ToUpperInvariant();
@@ -110,6 +113,9 @@ sealed class LiveBubble : Window
         chip.Content = swap;
         body.Content = notes ? Notes() : Lines();
         talk.Content = TalkLine();
+        end.Content = app.Listen.Listening
+            ? Ui.IconButton(Icons.Stop, "End meeting", app.RequestStop, Palette.Ink, 36, 14, fill: true)
+            : Ui.IconButton(Icons.Play, "Start listening", () => _ = app.ToggleListening(), Brand, 36, 15, fill: true);
         var hands = app.Settings.HandsFree;
         mode.Content = Ui.IconButton(hands ? Icons.Wave : Icons.Keyboard, hands ? "Hands-free (click for hold to talk)" : "Hold to talk (click for hands-free)",
             () => app.SetHandsFree(!app.Settings.HandsFree), hands ? Brand : Palette.Secondary, 34, 15);
@@ -133,7 +139,7 @@ sealed class LiveBubble : Window
         var lines = s?.Lines.TakeLast(3).ToList() ?? [];
         if (lines.Count == 0)
         {
-            var hint = app.Listen.Listening ? $"Listening for {Ui.TargetName(app.Settings.Theirs)}…" : "Start listening, then start your call.";
+            var hint = app.Listen.Listening ? $"Listening for {Ui.TargetName(app.Settings.Theirs)}…" : "Press ▶ to start listening, then start your call.";
             return Ui.Text(hint, 13, Palette.Secondary);
         }
         var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Bottom };

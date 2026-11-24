@@ -65,7 +65,7 @@ sealed class MainWindow : Window
     {
         this.app = app;
         selected = select;
-        Title = L("会议记录") + " · " + L("知了");
+        Title = "Snart · Past meetings";
         Width = 1180; Height = Math.Min(780, SystemParameters.WorkArea.Height - 24); MinWidth = 860; MinHeight = 520;
         // One white sheet, as the Mac's main window: no cards, no second layer.
         Background = Palette.Surface; FontFamily = Palette.Font; Icon = AppIcon.Image;
@@ -227,25 +227,23 @@ sealed class MainWindow : Window
     {
         var s = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, MaxWidth = 480, Margin = new Thickness(24, 40, 24, 60) };
         var mark = AppIcon.Small(72);
-        mark.Effect = new System.Windows.Media.Effects.DropShadowEffect { Color = Color.FromRgb(0xE8, 0x55, 0x2B), Opacity = 0.25, BlurRadius = 26, ShadowDepth = 8, Direction = 270 };
+        mark.Effect = new System.Windows.Media.Effects.DropShadowEffect { Color = Color.FromRgb(0x2F, 0x62, 0xE0), Opacity = 0.22, BlurRadius = 26, ShadowDepth = 8, Direction = 270 };
         s.Children.Add(mark);
-        var left = app.SetupLeft;
-        var title = Ui.Text(left > 0 ? LF("还差 %@ 步就能用", left) : L("还没有会议"), 26, Palette.Ink, FontWeights.Bold, wrap: false);
+        // Snart: setup lives in its own card (SnartSetup), as on the Mac; here only the empty state.
+        var left = 0;
+        var title = Ui.Text(left > 0 ? LF("还差 %@ 步就能用", left) : "No meetings yet", 26, Palette.Ink, FontWeights.Bold, wrap: false);
         title.HorizontalAlignment = HorizontalAlignment.Center; title.Margin = new Thickness(0, 26, 0, 8);
         s.Children.Add(title);
-        var line = Ui.Text(left > 0 ? L("知了把电脑里放出来的会议声音变成字幕和纪要。") : L("打开会议或视频，开始听后，每一场都会存在这里。"), 15, Palette.Secondary);
+        var line = Ui.Text("Start listening, then your call. Each meeting is saved here with its transcript and notes.", 15, Palette.Secondary);
         line.TextAlignment = TextAlignment.Center;
         s.Children.Add(line);
         if (left > 0) { s.Children.Add(Checklist()); return s; }
 
         var label = Ui.Row(10, Ui.Dot(Palette.Live, 9), Ui.Text(L("开始听"), 15, Brushes.White, Palette.Strong, wrap: false),
             new Border { BorderBrush = new SolidColorBrush(Color.FromArgb(0x55, 0xFF, 0xFF, 0xFF)), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(5), Padding = new Thickness(6, 0, 6, 1), Child = Ui.Text(Hotkey.Label.Replace('+', ' '), 12, Palette.NightText, wrap: false) });
-        var start = Capsule(label, Palette.Ink, null, 44, new Thickness(22, 0, 22, 0), () => _ = app.ToggleListening(), L("开始听"));
+        var start = Capsule(label, Palette.AccentFill, null, 44, new Thickness(22, 0, 22, 0), () => _ = app.ToggleListening(), L("开始听"));
         start.HorizontalAlignment = HorizontalAlignment.Center; start.Margin = new Thickness(0, 30, 0, 0);
         s.Children.Add(start);
-        var sample = Ui.LinkText(L("先听一段示例"), () => _ = app.PlaySample(), 13);
-        sample.Foreground = Palette.Secondary; sample.HorizontalAlignment = HorizontalAlignment.Center; sample.Margin = new Thickness(0, 16, 0, 0);
-        s.Children.Add(sample);
         return s;
     }
 
