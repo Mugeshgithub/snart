@@ -6,7 +6,8 @@
 
 <p align="center">
   <b>Talk across languages, in your own voice.</b><br>
-  A small Mac app by <a href="https://cognivexai.eu">CognivexAI</a> for calls in English, French, Italian, German and Tamil.
+  A small Mac app by <a href="https://cognivexai.eu">CognivexAI</a> for calls in English, French, Italian, German and Tamil.<br>
+  <sub><i>Snart</i> is <i>trans</i> backwards, from <i>translation</i>.</sub>
 </p>
 
 <p align="center">
