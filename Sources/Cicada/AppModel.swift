@@ -770,7 +770,8 @@ final class AppModel: ObservableObject {
         // Starting by hand means the meeting is here now: open the room microphone too, when the
         // user turned on 开始听时打开麦克风 (设置 › 通用). Launch still stays silent.
         micAutoOpened = false
-        if byUser, settings.autoMicOnStart, settings.listenSource == "system" {
+        // Hands-free needs the mic for your voice, and the room mic would pause it: skip.
+        if byUser, settings.autoMicOnStart, !settings.speakHandsFree, settings.listenSource == "system" {
             settings.listenSource = Recognition.legacy ? "room" : "both"
             micAutoOpened = true
             debugLog("mic auto-on: user started listening")
@@ -1437,7 +1438,7 @@ final class AppModel: ObservableObject {
             // room microphone, or the user's own voice is missing from the record (Tencent Meeting,
             // Zoom, …). 启动时 launch() still starts without the microphone; this is the call signal.
             // Once a meeting: closing the microphone by hand during the call must stay closed.
-            if settings.autoMicOnStart, !micAutoOpened, settings.listenSource == "system", !calls.isEmpty {
+            if settings.autoMicOnStart, !settings.speakHandsFree, !micAutoOpened, settings.listenSource == "system", !calls.isEmpty {
                 micAutoOpened = true
                 debugLog("mic auto-on: a meeting app started a call")
                 setMic(true)
