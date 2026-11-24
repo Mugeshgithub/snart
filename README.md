@@ -6,12 +6,13 @@
 
 <p align="center">
   <b>Talk across languages, in your own voice.</b><br>
-  A small Mac app by <a href="https://cognivexai.eu">CognivexAI</a> for calls in English, French, Italian, German and Tamil.<br>
+  A small Mac and Windows app by <a href="https://cognivexai.eu">CognivexAI</a> for calls in English, French, Italian, German and Tamil.<br>
   <sub><i>Snart</i> is <i>trans</i> backwards, from <i>translation</i>.</sub>
 </p>
 
 <p align="center">
   <a href="https://github.com/Mugeshgithub/snart/releases/latest"><b>Download for Mac</b></a> ·
+  <a href="#snart-for-windows"><b>Windows</b></a> ·
   <a href="#set-it-up-in-5-minutes">Set it up</a> ·
   <a href="#using-it-on-a-call">Use it on a call</a> ·
   <a href="https://cognivexai.eu">cognivexai.eu</a>
@@ -37,6 +38,7 @@ Your keys and your meetings stay on your Mac. Nothing is uploaded except the aud
 | | |
 |---|---|
 | A Mac with Apple silicon (M1 or later) | macOS 14.4 or newer |
+| Or a Windows PC | Windows 10 (2004) or Windows 11, normal (x64) or ARM |
 | An AI key for translation | [Anthropic](https://console.anthropic.com), [OpenAI](https://platform.openai.com) or [OpenRouter](https://openrouter.ai/keys) |
 | An ElevenLabs account for your voice | [Sign up at ElevenLabs](https://try.elevenlabs.io/ejkty900l2wg)\*, with a voice clone of yourself |
 | Headphones | Recommended, especially for hands-free |
@@ -139,6 +141,36 @@ You can change both later in **Settings › Voice**.
 | Hands-free does nothing | Turn off In-person mode in Settings › General, then stop and start listening. |
 | "Snart can't be opened" | System Settings › Privacy & Security › **Open Anyway**. |
 
+## Snart for Windows
+
+The same Snart on Windows: the bubble, your own voice, the five languages, notes and past meetings.
+
+<p align="center"><img src="docs/images/windows-bubble.png" width="380" alt="The Snart bubble on Windows"></p>
+
+### Install
+
+1. Download **Snart-0.1.0-Windows-x64.exe** (most PCs) or **Snart-0.1.0-Windows-ARM64.exe** (ARM laptops such as Surface Pro X or Snapdragon PCs) from the [latest release](https://github.com/Mugeshgithub/snart/releases/latest).
+2. Double-click it. This first version isn't signed yet, so Windows may say "Windows protected your PC": click **More info**, then **Run anyway**.
+3. Click **Install**. No admin rights needed. Snart goes in the Start menu and in the taskbar corner.
+
+<p align="center"><img src="docs/images/windows-install.png" width="480" alt="Installing Snart on Windows"></p>
+
+### Set it up
+
+1. Follow the setup: choose Anthropic, OpenAI or OpenRouter and paste that key, then your **ElevenLabs key** and **Voice ID** ([where to find them](#where-to-find-your-elevenlabs-key-and-voice-id)).
+2. Open **Settings › Interpreting** and click **Install** next to VB-Cable. It's the free virtual microphone that carries your voice into the call; Windows asks you to confirm.
+3. In **Settings › Language**, choose what you speak and what they speak.
+
+<p align="center"><img src="docs/images/windows-interpreting.png" width="520" alt="Interpreting settings on Windows"></p>
+
+### On a call
+
+1. Start listening from the taskbar icon (or **Ctrl Alt L**). The bubble appears at the top right.
+2. In Zoom, Meet, Teams or the browser, set the **microphone** to **CABLE Output (VB-Audio Virtual Cable)**.
+3. Hold **Right Ctrl** while you speak, or click the switch at the bottom left of the bubble for **hands-free**.
+
+**How it differs from the Mac:** Windows has no built-in speech recognition for all five languages, so ElevenLabs hears the other side. Subtitles come about **1.3 s** after they stop (about 1 s on the Mac). Your voice reaches the call about **1.8 s** after you stop talking.
+
 ## Build it yourself
 
 You need the Xcode Command Line Tools (`xcode-select --install`).
@@ -149,6 +181,14 @@ cd snart
 RELEASE=1 scripts/build.sh      # builds build/Snart.app
 scripts/test.sh                 # runs the tests
 scripts/package.sh              # makes the .dmg installer in build/
+```
+
+Windows (built on a Mac with .NET 10: `windows/scripts/install-dotnet.sh` once):
+
+```bash
+cd windows
+scripts/test.sh                 # runs the Windows engine's tests
+RELEASE=1 scripts/build.sh      # makes Snart-<version>-Windows-x64.exe and -ARM64.exe in windows/build/
 ```
 
 ## Privacy
