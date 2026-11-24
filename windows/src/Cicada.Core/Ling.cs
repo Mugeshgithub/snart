@@ -906,11 +906,25 @@ public sealed class LingClient
 
     async Task<JsonNode> Post(Uri url, string payload, string k, double timeout, CancellationToken cancel)
     {
+        // Snart: Claude through Anthropic's own Messages API, the request and answer converted.
+        var anthropic = Anthropic.Serves(url);
+        if (anthropic)
+        {
+            var messages = Anthropic.Messages(JsonNode.Parse(payload)!);
+            payload = messages.ToJsonString();
+            url = Anthropic.MessagesUrl(url);
+        }
         using var req = new HttpRequestMessage(HttpMethod.Post, url)
         {
             Content = new StringContent(payload, Encoding.UTF8, "application/json"),
         };
-        if (k.Length > 0) req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", k);
+        if (anthropic)
+        {
+            req.Headers.Add("x-api-key", k);
+            req.Headers.Add("anthropic-version", "2023-06-01");
+            if (payload.Contains("\"fallbacks\"")) req.Headers.Add("anthropic-beta", Anthropic.FallbackBeta);
+        }
+        else if (k.Length > 0) req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", k);
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancel);
         cts.CancelAfter(TimeSpan.FromSeconds(timeout));
         HttpResponseMessage res;
@@ -937,7 +951,8 @@ public sealed class LingClient
             try
             {
                 var text = await res.Content.ReadAsStringAsync(cts.Token);
-                return JsonNode.Parse(text) ?? throw new LingException(LingException.Kind.Parse);
+                var root = JsonNode.Parse(text) ?? throw new LingException(LingException.Kind.Parse);
+                return anthropic ? Anthropic.Completion(root) : root;
             }
             catch (OperationCanceledException) when (!cancel.IsCancellationRequested) { throw new LingException(LingException.Kind.Timeout); }
             catch (JsonException) { throw new LingException(LingException.Kind.Parse); }

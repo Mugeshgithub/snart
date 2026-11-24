@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
@@ -282,7 +284,7 @@ sealed class Onboarding : Window
     /// Another service than Ling is chosen (用不了 Ling？): step 1 asks for its key instead.
     bool Other => app.Settings.AiProvider != "ling";
     /// What the page offers; a custom address is set up in 设置 › AI 服务.
-    static readonly string[] Others = ["openrouter", "openai"];
+    static readonly string[] Others = ["anthropic", "openai", "openrouter"];
 
     void Switch(string provider)
     {

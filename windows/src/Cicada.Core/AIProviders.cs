@@ -40,6 +40,10 @@ public sealed record AIProvider(string Id, string Name, string? Base, string? Si
         [new("qwen/qwen3.8-omni-flash", "Writes nothing when no one speaks"), new("google/gemini-3.1-flash-lite", "Fastest, now and then writes noise as words")],
         [new("google/gemini-3.8-flash-tts", "Best balance"), new("google/gemini-3.8-flash-lite-tts", "Cheaper")], Gemini);
 
+    /// Claude with the user's own Anthropic key (Anthropic.cs converts the requests).
+    public static readonly AIProvider Anthropic = new("anthropic", "Anthropic", "https://api.anthropic.com/v1/", "https://console.anthropic.com/settings/keys",
+        [new("claude-haiku-5-5", "Fastest"), new("claude-opus-5-5", "Most accurate, slower")], [new("claude-haiku-5-5")], [], []);
+
     public static readonly AIProvider OpenAI = new("openai", "OpenAI", "https://api.openai.com/v1/", "https://platform.openai.com/api-keys",
         [new("gpt-5.4-nano", "Good enough, cheaper")], [new("gpt-audio-mini")], [], []);
 
@@ -53,8 +57,8 @@ public sealed record AIProvider(string Id, string Name, string? Base, string? Si
     public static readonly AIProvider Custom = new("custom", "Other (OpenAI-compatible)", null, null, [], [], [], []);
 
     /// The menu (Snart): Ling and ZenMux stay in the code, not offered.
-    public static readonly AIProvider[] All = [OpenRouter, OpenAI, Custom];
-    static readonly AIProvider[] Known = [OpenRouter, OpenAI, Custom, Ling, ZenMux];
+    public static readonly AIProvider[] All = [Anthropic, OpenAI, OpenRouter, Custom];
+    static readonly AIProvider[] Known = [Anthropic, OpenAI, OpenRouter, Custom, Ling, ZenMux];
 
     /// A service never named is OpenRouter (Snart).
     public static AIProvider Named(string? id) => Known.FirstOrDefault(p => p.Id == id) ?? OpenRouter;

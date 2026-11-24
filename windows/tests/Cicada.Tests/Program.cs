@@ -3962,7 +3962,7 @@ static class Tests
     public static void SnartDefaultsToClaudeOnOpenRouter()
     {
         Equal("openrouter", AIProvider.Named(null).Id, "a service never named");
-        Equal("openrouter,openai,custom", string.Join(",", AIProvider.All.Select(p => p.Id)), "the menu");
+        Equal("anthropic,openai,openrouter,custom", string.Join(",", AIProvider.All.Select(p => p.Id)), "the menu, as on the Mac");
         Equal("anthropic/claude-haiku-5.5", new AppSettings().AIConfig().TextModel, "fastest Claude first");
         Equal("en,fr,it,de,ta", string.Join(",", Languages.Sources.Select(l => l.Code)), "the five");
         Equal("ta", Languages.Base("ta-IN"), "base code");
@@ -4013,5 +4013,24 @@ static class Tests
         var none = new ElevenFake(_ => new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{\"text\":\"\"}") });
         t.Eleven = new ElevenLabsClient(() => "sk_test", () => "voice", none);
         Equal(null, await t.Hear(Wav.Bytes(new short[16000]), "en", "fr"), "no speech: no line");
+    }
+
+    public static void AnthropicRequestsAndAnswersAreConverted()
+    {
+        var chat = JsonNode.Parse("{\"model\":\"claude-opus-5-5\",\"max_tokens\":300,\"temperature\":0.2,\"response_format\":{\"type\":\"json_object\"},\"messages\":[{\"role\":\"system\",\"content\":\"Translate.\"},{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Bonjour\"}]}]}")!;
+        var m = Anthropic.Messages(chat);
+        Equal("Translate.\n\nReply with one JSON object only, no prose and no code fence.", m["system"]?.GetValue<string>(), "system and JSON mode");
+        Equal("Bonjour", m["messages"]![0]!["content"]!.GetValue<string>(), "the user turn");
+        Equal(300, m["max_tokens"]!.GetValue<int>(), "max tokens");
+        Equal("low", m["output_config"]!["effort"]!.GetValue<string>(), "least effort");
+        Equal("default", m["fallbacks"]?.GetValue<string>(), "Opus falls back");
+        Check(m["temperature"] is null, "no sampling switches");
+        Equal("https://api.anthropic.com/v1/messages", Anthropic.MessagesUrl(new Uri("https://api.anthropic.com/v1/chat/completions")).ToString(), "endpoint");
+        var reply = Anthropic.Completion(JsonNode.Parse("{\"stop_reason\":\"end_turn\",\"content\":[{\"type\":\"text\",\"text\":\"Hello\"}],\"usage\":{\"input_tokens\":5,\"output_tokens\":1}}")!);
+        Equal("Hello", reply["choices"]![0]!["message"]!["content"]!.GetValue<string>(), "answer");
+        Equal(("anthropic", false), AICheck.Owner("sk-ant-api03-xyz")!.Value, "whose key");
+        var refused = false;
+        try { Anthropic.Completion(JsonNode.Parse("{\"stop_reason\":\"refusal\",\"content\":[]}")!); } catch (LingException) { refused = true; }
+        Check(refused, "a refusal fails like an unreadable answer");
     }
 }

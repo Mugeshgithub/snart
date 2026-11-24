@@ -189,6 +189,7 @@ public sealed class AICheck
     {
         var k = key.Trim();
         if (k.StartsWith("sk-or-")) return ("openrouter", false);
+        if (k.StartsWith("sk-ant-")) return ("anthropic", false);
         if (k.StartsWith("sk-payg")) return ("zenmux", false);
         if (k.StartsWith("sk-mgmt")) return ("zenmux", true);
         return null;
