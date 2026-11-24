@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
@@ -91,7 +93,7 @@ sealed class DpapiProtector : IKeyProtector
         {
             var input = new Blob { cbData = data.Length, pbData = handle.AddrOfPinnedObject() };
             bool ok = protect
-                ? CryptProtectData(ref input, "Cicada Ling key", IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, CRYPTPROTECT_UI_FORBIDDEN, out var output)
+                ? CryptProtectData(ref input, "Snart key", IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, CRYPTPROTECT_UI_FORBIDDEN, out var output)
                 : CryptUnprotectData(ref input, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, CRYPTPROTECT_UI_FORBIDDEN, out output);
             if (!ok) throw new InvalidOperationException($"DPAPI failed {Marshal.GetLastWin32Error()}");
             var result = new byte[output.cbData];

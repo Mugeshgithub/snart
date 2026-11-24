@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 namespace Cicada;
 
 /// What a launch of the release exe should do. The downloaded installer is Cicada.exe under another name:
@@ -33,9 +35,9 @@ public static class SetupPlan
 
     /// The Start menu entry is named in the language of the UI at install time, so people find
     /// what they see; the files and paths stay "Cicada" (Chinese names get mangled in downloads).
-    public static string ShortcutName(string language) => language == "zh-Hans" ? "知了" : "Cicada";
+    public static string ShortcutName(string language) => "Snart";
     /// Every name a shortcut may have had, so a reinstall in another language leaves only one.
-    public static readonly string[] ShortcutNames = ["知了", "Cicada"];
+    public static readonly string[] ShortcutNames = ["Snart"];
     /// Settings › Apps sorts and searches by name: both names, so either language finds it.
     public const string DisplayName = "知了 Cicada";
 }

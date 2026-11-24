@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -58,7 +60,7 @@ static class FolderExportUi
     {
         var options = new List<(string Title, string? Detail, string? Path)>();
         foreach (var v in FolderExportFormat.ObsidianVaults().Take(3))
-            options.Add((LF("Obsidian 库「%@」", FolderExportFormat.LastName(v)), L("在库里新建 Cicada 文件夹"), Path.Combine(v, "Cicada")));
+            options.Add((LF("Obsidian 库「%@」", FolderExportFormat.LastName(v)), L("在库里新建 Cicada 文件夹"), Path.Combine(v, "Snart")));
         var documents = FolderExportFormat.DocumentsFolder;
         options.Add((ShortPath(documents), null, documents));
         options.Add((L("其他文件夹…"), null, null));

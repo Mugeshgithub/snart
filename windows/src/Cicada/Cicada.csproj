@@ -7,7 +7,7 @@
     <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
-    <AssemblyName>Cicada</AssemblyName>
+    <AssemblyName>Snart</AssemblyName>
     <RootNamespace>Cicada.App</RootNamespace>
     <ApplicationIcon>Assets/cicada.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -17,7 +17,7 @@
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <!-- Self-contained WPF is ~200 MB; compressed ~half. Starts a little slower the first time. -->
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
-    <Product>Cicada</Product>
+    <Product>Snart</Product>
     <Company>wquguru</Company>
   </PropertyGroup>
   <ItemGroup>

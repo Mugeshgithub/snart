@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -10,11 +12,11 @@ namespace Cicada.App;
 /// entry in Settings › Apps whose 卸载 runs `Cicada.exe --uninstall`. The windows are SetupWindow.
 static class Install
 {
-    public static string Folder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Cicada");
-    public static string Exe => Path.Combine(Folder, "Cicada.exe");
-    const string UninstallKey = @"Software\Microsoft\Windows\CurrentVersion\Uninstall\Cicada";
+    public static string Folder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Snart");
+    public static string Exe => Path.Combine(Folder, "Snart.exe");
+    const string UninstallKey = @"Software\Microsoft\Windows\CurrentVersion\Uninstall\Snart";
     /// The release build's single-instance mutex (Program.Main).
-    public const string Mutex = "com.wquguru.cicada";
+    public const string Mutex = "eu.cognivexai.snart";
 
     /// The installed version, from Settings › Apps' entry (the exe's own version resource isn't
     /// written when the app is built on the Mac). Null when nothing is installed.
@@ -33,7 +35,7 @@ static class Install
     {
         if (DebugServer.Send("setup quit") is null && !Running()) return;
         using var m = new Mutex(false, Mutex);
-        try { if (!m.WaitOne(TimeSpan.FromSeconds(30))) throw new IOException("Cicada didn't quit"); }
+        try { if (!m.WaitOne(TimeSpan.FromSeconds(30))) throw new IOException("Snart didn't quit"); }
         catch (AbandonedMutexException) { }
         m.ReleaseMutex();
         Log.Debug("setup: the running copy quit");

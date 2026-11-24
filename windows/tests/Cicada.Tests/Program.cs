@@ -52,8 +52,8 @@ static class Tests
         Equal(SetupPlan.Step.Upgrade, SetupPlan.Decide(false, download, home, "1.3.9", "1.4.0"), "older installed: upgrade");
         Equal(SetupPlan.Step.Open, SetupPlan.Decide(false, download, home, "1.4.0", "1.4.0"), "same version: open it");
         Equal(SetupPlan.Step.Open, SetupPlan.Decide(false, download, home, "1.10.0", "1.9.0"), "never downgrade");
-        Equal("知了", SetupPlan.ShortcutName("zh-Hans"), "Chinese shortcut");
-        Equal("Cicada", SetupPlan.ShortcutName("ja"), "other languages");
+        Equal("Snart", SetupPlan.ShortcutName("en"), "the shortcut");
+        Equal("Snart", SetupPlan.ShortcutName("zh-Hans"), "one name in every language");
     }
 
     public static void StringsLoadFromAReader()

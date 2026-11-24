@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
@@ -192,7 +194,7 @@ public sealed class LingClient
         this.config = config ?? (() => AIConfig.Default);
         http = handler is null ? new HttpClient() : new HttpClient(handler);
         http.Timeout = Timeout.InfiniteTimeSpan; // per request below
-        http.DefaultRequestHeaders.UserAgent.ParseAdd("Cicada-Windows/0.1");
+        http.DefaultRequestHeaders.UserAgent.ParseAdd("Snart-Windows/0.1");
         KeyState = CurrentKey() is null ? KeyState.None : KeyState.Unchecked;
     }
 

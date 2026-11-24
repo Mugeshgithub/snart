@@ -1,8 +1,10 @@
 #!/bin/bash
-# Builds the Windows app on the Mac: build/Cicada-win-x64/ and build/Cicada-win-arm64/, each a
-# self-contained Cicada.exe with everything inside it. RELEASE=1 for a release build, which also
-# writes build/Cicada-<v>-Windows-x64.exe and -ARM64.exe (the same exe, for people to download);
-# else a dev build, which keeps its records under "Cicada Dev" and opens the debug pipe.
+# Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+# Modified by CognivexAI, 2026.
+# Builds the Windows app on the Mac: build/Snart-win-x64/ and build/Snart-win-arm64/, each a
+# self-contained Snart.exe with everything inside it. RELEASE=1 for a release build, which also
+# writes build/Snart-<v>-Windows-x64.exe and -ARM64.exe (the same exe, for people to download);
+# else a dev build, which keeps its records under "Snart Dev" and opens the debug pipe.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 root=..
@@ -37,24 +39,24 @@ PY
 
 config=Debug; [ "${RELEASE:-}" = 1 ] && config=Release
 for rid in win-x64 win-arm64; do
-  out="build/Cicada-$rid"
+  out="build/Snart-$rid"
   rm -rf "$out"
   scripts/dotnet.sh publish src/Cicada -c "$config" -r "$rid" -o "$out" -p:DebugType=embedded -v quiet -nologo 2>&1 | grep -E ' error |warning CS' | sort -u || true
-  [ -f "$out/Cicada.exe" ] || { echo "build failed for $rid" >&2; exit 1; }
+  [ -f "$out/Snart.exe" ] || { echo "build failed for $rid" >&2; exit 1; }
   # The exe is the whole app (the UI text and the sample are inside it): the installer is a copy.
-  [ "$(ls "$out" | grep -v '^Cicada.exe$' | grep -v '^test$' | grep -v '^Cicada Dev.cmd$' || true)" = "" ] || { echo "unexpected files beside Cicada.exe in $out: $(ls "$out")" >&2; exit 1; }
+  [ "$(ls "$out" | grep -v '^Snart.exe$' | grep -v '^test$' | grep -v '^Snart Dev.cmd$' || true)" = "" ] || { echo "unexpected files beside Snart.exe in $out: $(ls "$out")" >&2; exit 1; }
   if [ "$config" = Release ]; then
     arch=x64; [ "$rid" = win-arm64 ] && arch=ARM64
-    setup="build/Cicada-$(cat "$root/VERSION")-Windows-$arch.exe"
-    cp "$out/Cicada.exe" "$setup"; echo "$setup"
+    setup="build/Snart-$(cat "$root/VERSION")-Windows-$arch.exe"
+    cp "$out/Snart.exe" "$setup"; echo "$setup"
   fi
   if [ "$config" = Debug ]; then
-    printf '@echo off\r\nstart "" "%%~dp0Cicada.exe" --dev\r\n' > "$out/Cicada Dev.cmd"
+    printf '@echo off\r\nstart "" "%%~dp0Snart.exe" --dev\r\n' > "$out/Snart Dev.cmd"
     # Everything the VM test needs in the one folder: the capture probe, the control script and the clips.
     mkdir -p "$out/test"
     scripts/dotnet.sh publish spike/LoopbackProbe -c Release -r "$rid" -o "$out/test" -p:DebugType=none -v quiet -nologo >/dev/null
     cp scripts/cicadactl.ps1 "$out/test/"
     cp spike/clips/*.wav "$out/test/" 2>/dev/null || echo "no clips: run spike/make-clips.sh" >&2
   fi
-  echo "$out/Cicada.exe ($(du -h "$out/Cicada.exe" | cut -f1))"
+  echo "$out/Snart.exe ($(du -h "$out/Snart.exe" | cut -f1))"
 done

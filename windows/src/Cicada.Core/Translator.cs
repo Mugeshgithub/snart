@@ -60,7 +60,7 @@ public sealed class Translator(LingClient ling, HttpMessageHandler? google = nul
     {
         var h = handler is null ? new HttpClient() : new HttpClient(handler);
         h.Timeout = TimeSpan.FromSeconds(8);
-        h.DefaultRequestHeaders.UserAgent.ParseAdd("Cicada/1.1");
+        h.DefaultRequestHeaders.UserAgent.ParseAdd("Snart/0.1");
         return h;
     }
 

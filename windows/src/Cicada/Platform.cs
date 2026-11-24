@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 using System.Runtime.InteropServices;
 using System.Windows.Interop;
 using Microsoft.Win32;
@@ -44,7 +46,7 @@ sealed class Hotkey : IDisposable
 static class AutoStart
 {
     const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
-    static string Name => Paths.Dev ? "Cicada Dev" : "Cicada";
+    static string Name => Paths.Dev ? "Snart Dev" : "Snart";
     // --background: started with Windows, so stay in the tray; opened by hand, the main window shows.
     static string Command(string exe) => $"\"{exe}\" --background" + (Paths.Dev ? " --dev" : "");
 

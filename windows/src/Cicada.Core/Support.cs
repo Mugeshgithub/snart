@@ -18,7 +18,7 @@ public static class Paths
             var home = Environment.GetEnvironmentVariable("CICADA_HOME");
             if (!string.IsNullOrEmpty(home)) return home;
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            return Path.Combine(appData, Dev ? "Cicada Dev" : "Cicada");
+            return Path.Combine(appData, Dev ? "Snart Dev" : "Snart");
         }
     }
 

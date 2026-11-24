@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 using System.Globalization;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -193,10 +195,10 @@ public static class FolderExportFormat
     public static string? Vault(string folder, IEnumerable<string>? vaults = null) => (vaults ?? ObsidianVaults()).FirstOrDefault(v => Under(folder, v));
 
     /// Documents\Cicada (Documents may be OneDrive's; that syncs, which is the point).
-    public static string DocumentsFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Cicada");
+    public static string DocumentsFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Snart");
 
     /// The suggestion: a Cicada folder in the most recently opened vault, else Documents\Cicada.
-    public static string DefaultFolder() => ObsidianVaults().FirstOrDefault() is { } v ? Path.Combine(v, "Cicada") : DocumentsFolder;
+    public static string DefaultFolder() => ObsidianVaults().FirstOrDefault() is { } v ? Path.Combine(v, "Snart") : DocumentsFolder;
 
     // MARK: Controlled folder access
 
