@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+# Modified by CognivexAI, 2026.
 """UI strings: Chinese source text is the key; Resources/<lang>.lproj/Localizable.strings (en, ja, ko)
 hold the translations, and each value must use the same format specifiers as its key.
 

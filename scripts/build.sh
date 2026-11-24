@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+# Modified by CognivexAI, 2026.
 # Builds "build/Snart.app" (Apple silicon or Intel via ARCH=arm64|x86_64, default: host arch).
 # Without RELEASE=1 it is a dev build: "Snart Dev", bundle id eu.cognivexai.interpreter.dev (its own
 # settings, permissions and meeting records), stamped with the branch and commit, which show in the

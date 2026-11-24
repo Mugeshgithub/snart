@@ -1,3 +1,4 @@
+// Copyright 2026 CognivexAI. Apache License 2.0.
 import Foundation
 
 /// The user's own voice, cloned on elevenlabs.io, speaking translations into the room in place of

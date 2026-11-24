@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 import Foundation
 
 /// The AI services the app can use. Ling is the reference (everything works, prompts are tuned on

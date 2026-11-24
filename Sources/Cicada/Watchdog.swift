@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 import Foundation
 
 /// Dev builds (and the debug mode): notices the main thread stuck and has `sample` record every

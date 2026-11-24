@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 import Foundation
 
 /// 不用按键 (hands-free interpreting): the mic through echo cancellation all the time, a sentence from

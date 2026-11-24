@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+# Modified by CognivexAI, 2026.
 # Builds the release app and packages it in build/:
 #   Snart-<version>-macOS-AppleSilicon.dmg/.zip    Apple silicon (arm64)
 #   checksums.txt                                  SHA-256 of all packaged files

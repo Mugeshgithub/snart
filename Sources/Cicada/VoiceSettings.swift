@@ -1,3 +1,4 @@
+// Copyright 2026 CognivexAI. Apache License 2.0.
 import SwiftUI
 
 /// Settings › 声音, the whole of interpreting in this build: the virtual mic (until it is

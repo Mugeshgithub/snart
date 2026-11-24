@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 import SwiftUI
 
 /// The panel's update strip, under the header while there is a newer release: install it, watch

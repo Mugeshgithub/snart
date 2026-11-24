@@ -19,6 +19,8 @@
 
 > **Inspired by Cicada.** Snart is built on [Cicada](https://github.com/wquguru/cicada), the open-source meeting interpreter by wquguru (Apache License 2.0). Cicada did the hard groundwork: live subtitles from your Mac's sound, meeting notes, and speaking a translation into a call. Snart takes that base and shapes it for a different use. See [What Snart changes](#what-snart-changes-from-cicada).
 
+Snart is a modified version of Cicada, shared under the same Apache 2.0 license. Cicada's authors are not responsible for Snart.
+
 ---
 
 ## What it does

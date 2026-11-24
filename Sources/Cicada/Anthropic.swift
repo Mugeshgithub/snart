@@ -1,3 +1,4 @@
+// Copyright 2026 CognivexAI. Apache License 2.0.
 import Foundation
 
 /// Claude through Anthropic's Messages API (`POST /v1/messages`, raw HTTP: there is no Anthropic
