@@ -2724,7 +2724,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
         model.openMainWindow = { [weak self] in self?.showMainWindow() }
         model.openSettingsWindow = { [weak self] in self?.showSettingsWindow() }
         model.showPanel = { [weak self] in self?.togglePopover() }
-        model.openPanel = { [weak self] in if self?.popover.isShown == false { self?.togglePopover() } }
+        model.openPanel = { [weak self] in self?.model.liveWindow.show() }
         model.openOnboarding = { [weak self] in self?.showOnboarding() }
         runningObserver = model.$running.combineLatest(model.updates.$update, model.$problem).sink { [weak self] live, update, problem in
             let badge: BrandImage.Badge = problem != nil ? .problem : update != nil ? .update : .none
@@ -2844,6 +2844,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
             }
             button.action = #selector(togglePopover)
             button.target = self
+            // Click: the bubble; right-click (or ⌃-click): the short menu.
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
         popover.behavior = .transient
         popover.animates = false
@@ -2864,7 +2866,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
         }
     }
 
+    /// Snart's menu bar icon: a click shows or hides the bubble; a right-click opens a short menu.
+    /// The old panel (`MenuPanelView`) is no longer shown.
     @objc private func togglePopover() {
+        guard let button = statusItem.button else { return }
+        let event = NSApp.currentEvent
+        if event?.type == .rightMouseUp || event?.modifierFlags.contains(.control) == true {
+            statusMenu().popUp(positioning: nil, at: NSPoint(x: 0, y: button.bounds.height + 4), in: button)
+            return
+        }
+        if model.liveWindow.isVisible { model.liveWindow.hide() } else { model.liveWindow.show() }
+    }
+
+    private func statusMenu() -> NSMenu {
+        let menu = NSMenu()
+        func add(_ title: String, _ key: String = "", _ action: @escaping () -> Void) {
+            let item = ClosureMenuItem(title: title, keyEquivalent: key, action: action)
+            menu.addItem(item)
+        }
+        add(model.liveWindow.isVisible ? "Hide bubble" : "Show bubble") { [weak self] in
+            guard let self else { return }
+            if self.model.liveWindow.isVisible { self.model.liveWindow.hide() } else { self.model.liveWindow.show() }
+        }
+        add(model.running ? "Stop listening" : "Start listening") { [weak self] in self?.model.setRunning(!(self?.model.running ?? true)) }
+        menu.addItem(.separator())
+        add("Settings…", ",") { [weak self] in self?.model.openSettings(.ai) }
+        add("Setup…") { [weak self] in self?.model.onboardingStep = 1; self?.showOnboarding() }
+        add("Past meetings") { [weak self] in self?.showMainWindow() }
+        menu.addItem(.separator())
+        add("Quit Snart", "q") { NSApp.terminate(nil) }
+        return menu
+    }
+
+    private func toggleOldPanel() {
         guard let button = statusItem.button else { return }
         if popover.isShown {
             popover.performClose(nil)
@@ -2930,20 +2964,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
     func showOnboarding() {
         popover.performClose(nil)
         if onboardingWindow == nil {
-            let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 860, height: 640),
-                             styleMask: [.titled, .closable, .fullSizeContentView],
-                             backing: .buffered, defer: false)
-            w.title = L("欢迎使用\(appDisplayName)")
-            w.titlebarAppearsTransparent = true
-            w.titleVisibility = .hidden
+            // Snart's own setup, in the bubble's glass (`SnartSetup.swift`).
+            let w = SetupWindow(contentRect: NSRect(x: 0, y: 0, width: 460, height: 520),
+                                styleMask: [.borderless, .fullSizeContentView], backing: .buffered, defer: false)
+            w.title = "Snart"
+            w.isOpaque = false
+            w.backgroundColor = .clear
+            w.hasShadow = true
+            w.isMovableByWindowBackground = true
             w.isReleasedWhenClosed = false
             w.delegate = self
-            w.contentView = NSHostingView(rootView: OnboardingView(
-                model: model, settings: model.settings, installer: model.installer, sample: model.sample,
-                onFinish: { [weak self] in
+            let host = NSHostingView(rootView: SetupView(
+                model: model, settings: model.settings, ling: model.ling, installer: model.installer,
+                close: { [weak self] in self?.onboardingWindow?.close() },
+                finish: { [weak self] in
                     UserDefaults.standard.set(true, forKey: "onboarded")
                     self?.onboardingWindow?.close()
                 }))
+            host.wantsLayer = true
+            host.layer?.backgroundColor = .clear
+            w.contentView = host
             w.center()
             onboardingWindow = w
         }
@@ -3055,4 +3095,17 @@ struct CloudState: Equatable {
     var listening = false
     /// The service's name, for a few seconds after listening came back to this Mac.
     var back: String?
+}
+
+
+/// A menu item that runs a closure (the menu bar icon's short menu).
+final class ClosureMenuItem: NSMenuItem {
+    private let run: () -> Void
+    init(title: String, keyEquivalent: String, action run: @escaping () -> Void) {
+        self.run = run
+        super.init(title: title, action: #selector(fire), keyEquivalent: keyEquivalent)
+        target = self
+    }
+    required init(coder: NSCoder) { fatalError("init(coder:) is not used") }
+    @objc private func fire() { run() }
 }

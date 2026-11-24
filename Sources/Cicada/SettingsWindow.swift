@@ -428,7 +428,9 @@ struct SettingsView: View {
             ScrollView { page }
         }
         .frame(width: 720, height: 600)
-        .background(Color(red: 0.965, green: 0.969, blue: 0.976))
+        // The bubble's tint: white into a faint blue, so settings read as part of the same app.
+        .background(LinearGradient(colors: [Color(white: 0.985), Color(red: 0.925, green: 0.945, blue: 0.99)],
+                                   startPoint: .top, endPoint: .bottom))
     }
 
     /// The current section without the scroll view (also drawn by the `settingsRender` debug command).
