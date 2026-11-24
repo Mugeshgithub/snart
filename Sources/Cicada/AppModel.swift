@@ -169,6 +169,10 @@ final class AppModel: ObservableObject {
     /// 存到文件夹 (settings › 通用).
     lazy var folderExport = FolderExporter(store: store, settings: settings)
     lazy var notesWindow = NotesWindowController(model: self)
+    /// The one window this build shows: live lines, start and stop, the talk key (`LiveWindow.swift`).
+    lazy var liveWindow = LiveWindowController(model: self)
+    /// The line being heard, before it is final.
+    @Published private(set) var draft = LiveDraft()
     lazy var importer = FileImporter(store: store, settings: settings, translator: translator, profiles: profiles)
     let vocabulary = Vocabulary(url: Vocabulary.defaultURL)
     lazy var fixes = LiveFixes(store: store, vocabulary: vocabulary, settings: settings)
@@ -230,6 +234,7 @@ final class AppModel: ObservableObject {
             guard let self else { return }
             // Someone is speaking either way; only the wrong model's words aren't shown.
             self.liveMain = (self.listen.hidesSource ? "" : src, dst, Date())
+            self.draft = LiveDraft(src: self.listen.hidesSource ? "" : src, dst: dst)
             self.showLive(spoke: src)
         }
         roomListen.onSubtitle = { [weak self] src, dst in
@@ -242,7 +247,10 @@ final class AppModel: ObservableObject {
             self?.overlay.setStatus(text)
         }
         listen.onStateChange = { [weak self] in self?.refresh() }
-        listen.onFinal = { [weak self] seg, duration in self?.heardOnline(seg, duration: duration) }
+        listen.onFinal = { [weak self] seg, duration in
+            self?.draft = LiveDraft()
+            self?.heardOnline(seg, duration: duration)
+        }
         roomListen.onFinal = { [weak self] seg, duration in self?.heardInRoom(seg, duration: duration) }
         roomListen.onStatus = { debugLog("room engine: \($0)") }
         speakers.onVoice = { [weak self] line, voice in
@@ -934,7 +942,7 @@ final class AppModel: ObservableObject {
     private func heardSpeech() {
         guard !speechHeard, listen.isRunning else { return }
         speechHeard = true
-        if settings.displayMode == "notes" { notesWindow.show() }
+        if settings.displayMode == "notes" { liveWindow.show() }
     }
 
     /// `force`: the user asked for this mode or started listening, show it even before anyone speaks.
@@ -950,7 +958,7 @@ final class AppModel: ObservableObject {
             overlay.hide()
             // The notes window waits for someone to speak, so launching or a silent tab
             // doesn't put an empty window on screen.
-            if listen.isRunning && (speechHeard || force) { notesWindow.show() }
+            if listen.isRunning { liveWindow.show() }
         }
     }
 
@@ -966,7 +974,7 @@ final class AppModel: ObservableObject {
 
     /// Asked for by name (菜单栏面板 打开, 窗口 › 实时纪要): shown even before anyone speaks, and
     /// without touching 显示方式, so 不显示 or 字幕条 is back at the next meeting.
-    func openNotesWindow() { notesWindow.show(asked: true) }
+    func openNotesWindow() { liveWindow.show() }
 
     /// The listening pill: bring back what shows this meeting, the subtitle bar in 字幕条 mode,
     /// else the notes window (in 不显示 just this once).
@@ -976,7 +984,7 @@ final class AppModel: ObservableObject {
 
     /// 收起 in the menu bar panel: out of the way for now, still in 实时纪要 mode
     /// (unlike the close button, it doesn't open the records window).
-    func hideNotesWindow() { notesWindow.hide() }
+    func hideNotesWindow() { liveWindow.hide() }
 
     func notesVisibilityChanged(_ shown: Bool) {
         if notesShown != shown { notesShown = shown }
@@ -2405,6 +2413,13 @@ final class AppModel: ObservableObject {
             if let img = r.nsImage, let tiff = img.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff) {
                 try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: p[1]))
             }
+        case "liveRender":
+            // liveRender:<png>: the live window, which screen capture can't see (sharingType none).
+            let r = ImageRenderer(content: LiveView(model: self, store: store).frame(width: 380, height: 460))
+            r.scale = 2
+            if let img = r.nsImage, let tiff = img.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff) {
+                try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: arg))
+            }
         case "peopleShow":
             // 设置 › 通用 › 人员库 in a window of its own, for `screencapture -l` (winall): a sheet a
             // synthetic click can't reach.
@@ -2677,8 +2692,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
                 MainActor.assumeIsolated { self?.showOnboarding() }
             }
         } else if !Self.launchedAsLoginItem {
-            // Opened by hand (Finder, Launchpad, Spotlight): show something, like the Dock icon does.
-            showMainWindow()
+            // Opened by hand (Finder, Launchpad, Spotlight): the live window, not the records.
+            model.liveWindow.show()
         }
         model.installDebugControl()
         UNUserNotificationCenter.current().delegate = self
@@ -2740,7 +2755,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
     /// Dock icon or Finder: bring back what is open; the main window only when nothing is.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         let open = [mainWindow, settingsWindow, onboardingWindow].compactMap { $0 }.filter { $0.isVisible || $0.isMiniaturized }
-        if open.isEmpty { showMainWindow() } else { open.forEach { $0.deminiaturize(nil) }; NSApp.activate() }
+        if open.isEmpty { model.liveWindow.show() } else { open.forEach { $0.deminiaturize(nil) }; NSApp.activate() }
         return false
     }
 
@@ -2893,7 +2908,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
             UserDefaults.standard.set(true, forKey: "onboarded")
             // Done (or 稍后): land on the records window rather than nothing but the menu bar icon.
             if mainWindow?.isVisible != true {
-                DispatchQueue.main.async { [weak self] in MainActor.assumeIsolated { self?.showMainWindow() } }
+                DispatchQueue.main.async { [weak self] in MainActor.assumeIsolated { self?.model.liveWindow.show() } }
             }
         }
     }
