@@ -26,6 +26,9 @@ sealed class Onboarding : Window
     bool autoStart = true, playing;
     // 同声传译 is on while its step is showing (so 右 Ctrl can be tried); this is what it was before.
     bool? speakBefore;
+    // Snart: the ElevenLabs key and voice, beside the AI key.
+    readonly PasswordBox elevenKey = new();
+    readonly TextBox elevenVoice = new();
     // Step 1: the key field and what we know about it
     readonly PasswordBox keyBox = new() { FontSize = 14, MinHeight = 34, VerticalContentAlignment = VerticalAlignment.Center };
     readonly TextBox keyText = new() { FontSize = 14, MinHeight = 34, VerticalContentAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed };
@@ -207,9 +210,8 @@ sealed class Onboarding : Window
         UIElement left = back;
         if (step == 0 && Other)
         {
-            var ling = Ui.LinkText(L("‹ 还是用 Ling"), () => Switch("ling"));
-            ling.Foreground = Palette.Secondary;
-            left = Ui.Row(16, ling, Ui.Row(8, Ui.Icon(Icons.Lock, 14, Palette.Secondary), Ui.Text(LF("仅保存在本机当前账户下，仅发送至 %@", app.Ling.Config.Name), 13, Palette.Secondary, wrap: false)));
+            // Snart: no Ling to go back to.
+            left = Ui.Row(8, Ui.Icon(Icons.Lock, 14, Palette.Secondary), Ui.Text(LF("仅保存在本机当前账户下，仅发送至 %@", app.Ling.Config.Name), 13, Palette.Secondary, wrap: false));
         }
         else if (step == 0)
         {
@@ -280,7 +282,7 @@ sealed class Onboarding : Window
     /// Another service than Ling is chosen (用不了 Ling？): step 1 asks for its key instead.
     bool Other => app.Settings.AiProvider != "ling";
     /// What the page offers; a custom address is set up in 设置 › AI 服务.
-    static readonly string[] Others = ["openrouter", "zenmux"];
+    static readonly string[] Others = ["openrouter", "openai"];
 
     void Switch(string provider)
     {
@@ -305,8 +307,25 @@ sealed class Onboarding : Window
         var row = KeyRow(LF("粘贴 %@ 的 key", app.Ling.Config.Name));
         keyStatus.Margin = new Thickness(0, 12, 0, 0);
         row.Margin = new Thickness(0, 18, 0, 0);
-        var card = StepCard(new StackPanel { Children = { top, row, keyStatus } });
-        return Page(L("用其他服务"), L("听、纪要和翻译都能用，模型已经选好。"), card);
+        // Snart: ElevenLabs beside the AI key, as in the Mac's setup: it hears the meeting and
+        // speaks in the user's clone. Saved with Continue.
+        elevenKey.Password = ""; elevenVoice.Text = app.Settings.ElevenVoice;
+        var ek = Ui.Field(elevenKey); ek.Height = 36;
+        var ev = Ui.Field(elevenVoice); ev.Height = 36;
+        System.Windows.Automation.AutomationProperties.SetName(elevenKey, "ElevenLabs API key");
+        System.Windows.Automation.AutomationProperties.SetName(elevenVoice, "Voice ID of your clone");
+        var eleven = new StackPanel
+        {
+            Margin = new Thickness(0, 22, 0, 0),
+            Children =
+            {
+                Ui.Text("Your voice · ElevenLabs", 15, Palette.Ink, FontWeights.SemiBold),
+                Ui.Helper(app.Eleven.CanHear ? "Key saved. Paste a new one to replace it" : "It hears the meeting and speaks in your cloned voice"),
+                Ui.Stack(8, Ui.Row(8, Ui.Text("Key", 13, Palette.Secondary, wrap: false), ek), Ui.Row(8, Ui.Text("Voice ID", 13, Palette.Secondary, wrap: false), ev)),
+            },
+        };
+        var card = StepCard(new StackPanel { Children = { top, row, keyStatus, eleven } });
+        return Page("Your keys", "Stored only on this PC. You can add them later in Settings.", card);
     }
 
     /// The key field with its reveal button, and 粘贴并检查.
@@ -355,6 +374,8 @@ sealed class Onboarding : Window
 
     async Task SaveKey()
     {
+        if (elevenKey.Password.Trim().Length > 0 || elevenVoice.Text.Trim() != app.Settings.ElevenVoice)
+            app.SaveElevenLabs(elevenKey.Password, elevenVoice.Text);
         var text = keyBox.Password.Trim();
         // 继续 is always allowed once a key is in: a failed check stays in 还差几步 and the settings.
         if (text.Length == 0 && app.Ling.HasKey) { Go(1); return; }
