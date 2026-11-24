@@ -16,6 +16,8 @@
   <a href="https://cognivexai.eu">cognivexai.eu</a>
 </p>
 
+> **Inspired by Cicada.** Snart is built on [Cicada](https://github.com/wquguru/cicada), the open-source meeting interpreter by wquguru (Apache License 2.0). Cicada did the hard groundwork: live subtitles from your Mac's sound, meeting notes, and speaking a translation into a call. Snart takes that base and shapes it for a different use. See [What Snart changes](#what-snart-changes-from-cicada).
+
 ---
 
 ## What it does
@@ -150,6 +152,28 @@ scripts/package.sh              # makes the .dmg installer in build/
 - Meetings are saved in `~/Library/Application Support/Snart` on your Mac.
 - Audio and text go only to the services you set up: your AI provider for translation and notes, ElevenLabs for your voice and for Tamil speech, and Google Translate for quick first translations of short sentences in English, French, Italian and German.
 
+## What Snart changes from Cicada
+
+Cicada is a full meeting assistant built around Chinese and English meetings. Snart keeps its engine and focuses it on one thing: a two-way conversation between people who don't share a language.
+
+**From Cicada (kept as it is):** hearing your Mac's sound, on-device speech recognition, live subtitles, meeting notes and past meetings, the hold-to-talk and hands-free speaking path, the virtual microphone, word list and recording import.
+
+**Changed or added in Snart:**
+
+| | Cicada | Snart |
+|---|---|---|
+| Use case | Following and recording meetings | Talking both ways on a call, in your own voice |
+| Languages | Chinese, English, Japanese, Korean, Spanish, French, German, Portuguese | English, French, Italian, German and Tamil, any pair |
+| Tamil | Not supported | Spoken Tamil and Tanglish, heard by ElevenLabs |
+| Your voice | Built-in voices and a voice clone through Ling | Your ElevenLabs voice clone |
+| AI service | Ling and other providers | Anthropic, OpenAI, OpenRouter or your own |
+| Delay when you speak | One translation service per sentence | Faster model for live lines, fastest translation wins, speech starts by phrase (about 1 to 1.5 s) |
+| Look | Main window and settings | One small floating bubble, glass setup and settings |
+| Wrong-language check | No | Nothing is sent if you spoke the wrong language |
+| Calls | Meeting apps like Zoom and Tencent Meeting | Also WhatsApp Web, with a hint when the WhatsApp app can't be used |
+| Interface | Chinese and English | English |
+| Updates and sharing | Cicada's update server and share links | Removed: Snart never contacts Cicada's servers |
+
 ## Credits
 
-Snart is made by [CognivexAI](https://cognivexai.eu). It is built on [Cicada](https://github.com/wquguru/cicada) by wquguru, under the Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+Snart is made by [CognivexAI](https://cognivexai.eu), inspired by and built on [Cicada](https://github.com/wquguru/cicada) by wquguru. Many thanks to the Cicada project. Cicada's code is used under the Apache License 2.0, and Snart is shared under the same license. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
