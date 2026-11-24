@@ -69,6 +69,8 @@ public sealed class AppSettings
     [JsonPropertyName("askNames")] public bool AskNames { get; set; } = true;
     /// 同声传译: hold the talk key to speak into the meeting in its language.
     [JsonPropertyName("speak")] public bool Speak { get; set; }
+    /// Snart's hands-free: no key, a sentence goes when you pause (HandsFreeDetector).
+    [JsonPropertyName("speakHandsFree")] public bool HandsFree { get; set; }
     /// The talk key, a TalkKey name ("rcontrol", "f13"…): not every keyboard has right Ctrl.
     [JsonPropertyName("talkKey")] public string TalkKey { get; set; } = Cicada.TalkKey.Default;
     /// 我说的语言: "system" or a source code.

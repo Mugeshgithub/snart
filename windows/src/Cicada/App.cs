@@ -214,7 +214,7 @@ sealed class Controller
         // Snart: never asks Cicada's GitHub for updates (a test feed in a dev build still can).
         if (Paths.Dev && Environment.GetEnvironmentVariable("CICADA_UPDATE_FEED") is { Length: > 0 }) { checksUpdates = true; Updates.Start(); }
         var watch = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
-        watch.Tick += (_, _) => _ = WatchEnd();
+        watch.Tick += (_, _) => { _ = WatchEnd(); UpdateHandsFree(); };
         watch.Start();
         if (AutoStart.Enabled) AutoStart.Refresh();
         // The Mac shows its main window when opened by hand; a Windows user who double-clicks the
@@ -907,6 +907,46 @@ sealed class Controller
         echoMic = null;
         mic = null;
         return (pcm, cancelled);
+    }
+
+    // MARK: Hands-free (Snart)
+
+    HandsFreeMic? handsFree;
+    public bool HandsFreeOn => handsFree is not null;
+
+    /// Hands-free runs while a meeting is listened to, interpreting is on and the virtual mic is
+    /// there; it stops with any of them.
+    public void UpdateHandsFree()
+    {
+        var want = Settings.HandsFree && Settings.Speak && Listen.Listening && Endpoints.Cable() is not null;
+        if (want && handsFree is null && TalkMic() is { } m)
+        {
+            var speakers = Endpoints.Default(Endpoints.Flow.Render);
+            var reference = speakers is not null && speakers.Id != Endpoints.Cable()?.Id ? speakers.Id : null;
+            var h = new HandsFreeMic(m.Id, reference,
+                began: () => Dispatch.BeginInvoke(() => { if (Speak.State is SpeakEngine.Phase.Idle or SpeakEngine.Phase.Failed) Speak.BeginRecording(); }),
+                send: (pcm, aec) => Dispatch.BeginInvoke(() =>
+                {
+                    if (pcm.Length < Segmenter.Rate * 3 / 10) { if (Speak.State == SpeakEngine.Phase.Recording) Speak.Cancel(); return; }
+                    _ = Speak.Speak(Wav.Bytes(pcm), new DeviceSpeaker(Endpoints.Cable), aec);
+                }));
+            if (h.Error is null) { handsFree = h; Changed(); }
+        }
+        else if (!want && handsFree is not null)
+        {
+            handsFree.Stop();
+            handsFree = null;
+            if (Speak.State == SpeakEngine.Phase.Recording) Speak.Cancel();
+            Changed();
+        }
+    }
+
+    public void SetHandsFree(bool on)
+    {
+        Settings.HandsFree = on;
+        Settings.Save();
+        UpdateHandsFree();
+        Changed();
     }
 
     /// Another key went down while a modifier talk key was held (Ctrl C): a shortcut, not talking.

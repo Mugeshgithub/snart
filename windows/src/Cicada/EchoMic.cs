@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 using System.Runtime.InteropServices;
 
 namespace Cicada.App;
@@ -35,6 +37,12 @@ sealed class EchoMic
         thread.SetApartmentState(ApartmentState.MTA);
         thread.Start();
         ready.Wait(2000);
+    }
+
+    /// What came in since the last Take (hands-free reads the running mic this way).
+    public short[] Take()
+    {
+        lock (samples) { var got = samples.ToArray(); samples.Clear(); return got; }
     }
 
     public short[] Stop()

@@ -15,7 +15,7 @@ sealed class LiveBubble : Window
     readonly Controller app;
     readonly DispatcherTimer clock = new() { Interval = TimeSpan.FromSeconds(1) };
     readonly TextBlock clockText = Ui.Text("", 12, Palette.Secondary, wrap: false);
-    readonly ContentControl body = new(), talk = new(), chip = new();
+    readonly ContentControl body = new(), talk = new(), chip = new(), mode = new();
     bool notes, renderQueued;
 
     static readonly SolidColorBrush Brand = new(Color.FromRgb(0x2F, 0x62, 0xE0));
@@ -64,6 +64,10 @@ sealed class LiveBubble : Window
         var stop = Ui.IconButton(Icons.Stop, "End meeting", () => { if (app.Listen.Listening) app.RequestStop(); else _ = app.ToggleListening(); }, Palette.Ink, 36, 14, fill: true);
         DockPanel.SetDock(stop, Dock.Right);
         foot.Children.Add(stop);
+        // Hold the key, or hands-free: one click switches, as the Mac's ⌥ / 〰.
+        DockPanel.SetDock(mode, Dock.Left);
+        mode.Margin = new Thickness(0, 0, 6, 0);
+        foot.Children.Add(mode);
         foot.Children.Add(new Border { Background = Bead, CornerRadius = new CornerRadius(17), Padding = new Thickness(14, 8, 14, 8), Margin = new Thickness(0, 0, 8, 0), Child = talk });
 
         var root = new DockPanel();
@@ -106,6 +110,9 @@ sealed class LiveBubble : Window
         chip.Content = swap;
         body.Content = notes ? Notes() : Lines();
         talk.Content = TalkLine();
+        var hands = app.Settings.HandsFree;
+        mode.Content = Ui.IconButton(hands ? Icons.Wave : Icons.Keyboard, hands ? "Hands-free (click for hold to talk)" : "Hold to talk (click for hands-free)",
+            () => app.SetHandsFree(!app.Settings.HandsFree), hands ? Brand : Palette.Secondary, 34, 15);
         Tick();
     }
 
@@ -183,6 +190,7 @@ sealed class LiveBubble : Window
             SpeakEngine.Phase.Speaking => (Icons.Speaker, Palette.Live, sp.Heard ?? $"Speaking {theirs}…"),
             SpeakEngine.Phase.Failed => (Icons.Warning, Palette.Danger, sp.Problem ?? "Nothing sent"),
             _ when !app.Settings.Speak => (Icons.Keyboard, Palette.Secondary, "Turn on speaking in Settings › Interpreting"),
+            _ when app.Settings.HandsFree && app.HandsFreeOn => (Icons.Wave, Palette.Secondary, $"Hands-free: just talk, they hear {theirs}"),
             _ => (Icons.Keyboard, Palette.Secondary, $"Hold {PushToTalk.Label} to speak {theirs}"),
         };
         var t = Ui.Text(text, 13, sp.State == SpeakEngine.Phase.Idle ? Palette.Secondary : Palette.Ink, wrap: false);

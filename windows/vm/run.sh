@@ -44,4 +44,6 @@ qemu-system-aarch64 \
   "${display[@]}" -device usb-kbd -device usb-tablet \
   -audiodev none,id=snd -device usb-audio,audiodev=snd \
   -nic user,model=virtio-net-pci,hostfwd=tcp:127.0.0.1:2222-:22 \
-  -vnc 127.0.0.1:1 -monitor unix:"$VM/monitor.sock",server,nowait -daemonize -pidfile "$VM/qemu.pid" </dev/null >/dev/null 2>"$VM/qemu.log" || { cat "$VM/qemu.log" >&2; exit 1; }
+  -vnc 127.0.0.1:1,password=on -monitor unix:"$VM/monitor.sock",server,nowait -daemonize -pidfile "$VM/qemu.pid" </dev/null >/dev/null 2>"$VM/qemu.log" || { cat "$VM/qemu.log" >&2; exit 1; }
+# macOS Screen Sharing won't connect to a VNC without a password: "snart" (localhost only).
+sleep 1; printf 'set_password vnc snart\n' | nc -U -w 2 "$VM/monitor.sock" >/dev/null

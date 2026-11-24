@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -28,13 +30,14 @@ static class Palette
     public static readonly SolidColorBrush Secondary = B(0x5A5F6B);
     public static readonly SolidColorBrush Tertiary = B(0x6B7080);
     public static readonly SolidColorBrush Live = B(0xE8552B);
-    public static readonly SolidColorBrush AccentFill = B(0xC9441D);
-    public static readonly SolidColorBrush AccentPale = B(0xFDEBE4);
-    public static readonly SolidColorBrush AccentText = B(0xA8370F);
+    // Snart blue, as on the Mac; Live stays the red-orange of "recording".
+    public static readonly SolidColorBrush AccentFill = B(0x2F62E0);
+    public static readonly SolidColorBrush AccentPale = B(0xE8EEFC);
+    public static readonly SolidColorBrush AccentText = B(0x1F4FC4);
     /// 回放: a line's time as a link, the line at the playhead (the Mac's accentPale), the player
     /// bar's box, and a line under the pointer that a click would play (the Mac's raised).
-    public static readonly SolidColorBrush TimeLink = B(0xB33B14);
-    public static readonly SolidColorBrush Playing = B(0xFCEDE7);
+    public static readonly SolidColorBrush TimeLink = B(0x1F4FC4);
+    public static readonly SolidColorBrush Playing = B(0xEEF3FD);
     public static readonly SolidColorBrush PlayerFill = B(0xF5F6F8);
     public static readonly SolidColorBrush Raised = B(0xF5F6F8);
     public static readonly SolidColorBrush Success = B(0x0F7B3F);
@@ -163,7 +166,7 @@ static class Ui
     {
         var (bg, fg) = kind switch
         {
-            Kind.Primary => (Palette.Ink, Brushes.White),
+            Kind.Primary => (Palette.AccentFill, Brushes.White),
             Kind.Accent => (Palette.AccentFill, Brushes.White),
             Kind.Danger => (Palette.Danger, Brushes.White),
             Kind.Pale => (Palette.AccentPale, Palette.AccentText),
@@ -455,7 +458,7 @@ static class Ui
         var track = new Border { Width = 38, Height = 22, CornerRadius = new CornerRadius(11), Child = knob, Padding = new Thickness(2) };
         void Paint(bool v)
         {
-            track.Background = v ? Palette.Ink : Palette.Toggle;
+            track.Background = v ? Palette.AccentFill : Palette.Toggle;
             knob.HorizontalAlignment = v ? HorizontalAlignment.Right : HorizontalAlignment.Left;
         }
         Paint(on);

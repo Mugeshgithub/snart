@@ -318,6 +318,8 @@ sealed partial class SettingsWindow : Window
         yield return Label(L("说话"));
         yield return Group(
             Card(null, L("按住说话"), keyHelp, keyControl),
+            Card(null, "Hands-free", "No key: it speaks for you after a short pause. Best with headphones.",
+                Ui.Switch(s.HandsFree, app.SetHandsFree, "Hands-free")),
             ElevenLabsCard());
         yield return Label(L("麦克风"));
         var mic = Card(null, L("译文送进会议"), cable ? L("在会议软件里把麦克风选成 CABLE Output") : L("需要装免费的 VB-Cable；装的时候 Windows 会请你确认"), cableControl);
@@ -528,7 +530,9 @@ sealed partial class SettingsWindow : Window
         }
         var later = !ling.HasKey ? L("填好 key 后可用") : reason == AICheck.Reason.Unreachable ? LF("连上 %@ 后可用", ling.ServiceName) : L("换好 key 后可用");
         var off = ling.HasKey ? L("暂不可用") : L("需要 key");
-        var hear = !on ? (off, "off", later)
+        // Snart: ElevenLabs Scribe hears whenever its key is saved, whatever the AI service's state.
+        var hear = app.Eleven.CanHear ? ("ElevenLabs", "ok", "Scribe hears them, the text is then translated")
+            : !on ? (off, "off", later)
             : ling.Hears == false ? (L("暂不可用"), "off", LF("%@ 听不了声音。", ling.HearName))
             : c.IsLing ? (uses, "ok", L("Ming 一次识别并翻译"))
             : (uses, "ok", c.HearModel + " · " + L("比 Ling 晚 1–2 秒出字"));
@@ -545,6 +549,7 @@ sealed partial class SettingsWindow : Window
             fixOn ? L("每句话说完多发一次文字请求") : textOn ? L("在“词表”里打开") : later);
         // Windows speaks when the service can't, as the Mac does with its own voice.
         var speaks = ling.Speaks && !down;
+        if (app.Eleven.CanSpeak) { yield return Row(L("同传声音"), "ElevenLabs", "ok", "Your own cloned voice"); yield break; }
         yield return speaks ? Row(L("同传声音"), uses, "ok", ling.LastVoice is { } last ? (last.Ok ? L("上次同传时正常") : L("上次同传没出声，用了 Windows 的声音")) : c.IsLing ? L("Ming 的声音") : c.VoiceModel!)
             : down ? Row(L("同传声音"), L("本机"), "local", L("先用 Windows 的声音"))
             : on ? Row(L("同传声音"), L("本机"), "local", L("没填声音模型，用 Windows 的声音"))

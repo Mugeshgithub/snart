@@ -4033,4 +4033,26 @@ static class Tests
         try { Anthropic.Completion(JsonNode.Parse("{\"stop_reason\":\"refusal\",\"content\":[]}")!); } catch (LingException) { refused = true; }
         Check(refused, "a refusal fails like an unreadable answer");
     }
+
+    public static void HandsFreeFindsASentenceAndItsEnd()
+    {
+        var d = new HandsFreeDetector();
+        HandsFreeDetector.Event Run(float rms, double seconds)
+        {
+            var last = HandsFreeDetector.Event.None;
+            for (var t = 0.0; t < seconds - 1e-9; t += 0.01) { var e = d.Feed(rms, 0.01); if (e != HandsFreeDetector.Event.None) last = e; }
+            return last;
+        }
+        Equal(HandsFreeDetector.Event.None, Run(0.002f, 3.2), "learning the room's floor");
+        Check(d.Ready, "ready after 3 s");
+        Equal(HandsFreeDetector.Event.None, Run(0.05f, 0.05), "a blip is not a start");
+        Equal(HandsFreeDetector.Event.None, Run(0.002f, 0.3), "quiet again");
+        Equal(HandsFreeDetector.Event.Began, Run(0.05f, 1.0), "a voice starts a sentence");
+        Equal(HandsFreeDetector.Event.None, Run(0.002f, 0.4), "a breath doesn't end it");
+        Equal(HandsFreeDetector.Event.None, Run(0.05f, 0.5), "talking again");
+        Equal(HandsFreeDetector.Event.Ended, Run(0.002f, 0.8), "0.7 s of quiet ends it");
+        Check(!d.Talking, "not talking after the end");
+        Equal(0f, HandsFreeDetector.Rms([]), "empty block");
+        Check(Math.Abs(HandsFreeDetector.Rms([16384, -16384]) - 0.5f) < 1e-4, "RMS of half scale");
+    }
 }
