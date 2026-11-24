@@ -8,7 +8,9 @@ import Foundation
 enum ElevenLabs {
     /// Stored in `speakVoices` for each language it speaks.
     static let id = "eleven"
-    static let model = "eleven_flash_v2_5"
+    /// Multilingual over Flash: a clone speaking another language sounded rough on Flash, for
+    /// about 0.15 s more before the first sound.
+    static let model = "eleven_multilingual_v2"
     private static let service = "elevenlabs"
 
     static var key: String? { AIKey.read(service) }
