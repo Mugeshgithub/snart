@@ -35,8 +35,10 @@ Your keys and your meetings stay on your Mac. Nothing is uploaded except the aud
 |---|---|
 | A Mac with Apple silicon (M1 or later) | macOS 14.4 or newer |
 | An AI key for translation | [Anthropic](https://console.anthropic.com), [OpenAI](https://platform.openai.com) or [OpenRouter](https://openrouter.ai/keys) |
-| An ElevenLabs account for your voice | [elevenlabs.io](https://elevenlabs.io), with a voice clone of yourself |
+| An ElevenLabs account for your voice | [Sign up at ElevenLabs](https://try.elevenlabs.io/ejkty900l2wg)\*, with a voice clone of yourself |
 | Headphones | Recommended, especially for hands-free |
+
+\* Affiliate link: CognivexAI may earn a small commission if you sign up, at no cost to you.
 
 ## Set it up in 5 minutes
 
@@ -83,7 +85,7 @@ Snart opens a short setup the first time. You can come back to it any time from 
 
 ### Where to find your ElevenLabs key and Voice ID
 
-1. Sign in at [elevenlabs.io](https://elevenlabs.io).
+1. Sign in at [ElevenLabs](https://try.elevenlabs.io/ejkty900l2wg)\*.
 2. **API key:** click your profile › **API Keys** › **Create API key**. It starts with `sk_`. Give it access to Text to Speech and Speech to Text.
 3. **Your voice:** go to **Voices** › **Add a new voice** › **Instant Voice Clone** and record or upload about a minute of yourself talking.
 4. **Voice ID:** open your new voice, click **⋯** › **Copy voice ID**.
