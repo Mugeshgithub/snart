@@ -235,7 +235,6 @@ final class AppModel: ObservableObject {
             guard let self else { return }
             // Someone is speaking either way; only the wrong model's words aren't shown.
             self.liveMain = (self.listen.hidesSource ? "" : src, dst, Date())
-            self.draft = LiveDraft(src: self.listen.hidesSource ? "" : src, dst: dst)
             self.showLive(spoke: src)
         }
         roomListen.onSubtitle = { [weak self] src, dst in
@@ -248,6 +247,10 @@ final class AppModel: ObservableObject {
             self?.overlay.setStatus(text)
         }
         listen.onStateChange = { [weak self] in self?.refresh() }
+        listen.onDraft = { [weak self] src, dst in
+            let next = LiveDraft(src: src, dst: dst)
+            if self?.draft != next { self?.draft = next }
+        }
         listen.onFinal = { [weak self] seg, duration in
             self?.draft = LiveDraft()
             self?.heardOnline(seg, duration: duration)
@@ -2456,6 +2459,10 @@ final class AppModel: ObservableObject {
             if let img = r.nsImage, let tiff = img.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff) {
                 try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: p[1]))
             }
+        case "liveCapturable":
+            // liveCapturable:on|off: let screencapture see the drop (`winall` gives its id).
+            liveWindow.setCapturable(arg != "off")
+            debugLog("live window number=\(liveWindow.windowNumber ?? 0)")
         case "liveRender":
             // liveRender:<png>: the live window, which screen capture can't see (sharingType none).
             let r = ImageRenderer(content: LiveView(model: self, store: store, settings: settings).frame(width: 380, height: 460))

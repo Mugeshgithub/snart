@@ -930,8 +930,13 @@ final class ListenEngine {
         if segments.last?.id == id { renderSubtitles() }
     }
 
+    /// Only the line still being said and its rough translation (the live window shows it under
+    /// the finished lines); `onSubtitle` carries the last finished line too, for the subtitle bar.
+    var onDraft: ((_ source: String, _ translation: String) -> Void)?
+
     private func renderSubtitles() {
         let draft = shownDraft
+        onDraft?(hidesSource ? "" : draft, draft.isEmpty ? "" : volatileTranslation)
         guard !(segments.isEmpty && draft.isEmpty) else { return }
         let srcJoin = joiner(for: activeLang?.code ?? "en")
         let last = segments.last.map { fixedText[$0.id] ?? $0.text } ?? ""
