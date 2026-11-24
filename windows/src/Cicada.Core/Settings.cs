@@ -40,8 +40,8 @@ public sealed class AppSettings
     [JsonIgnore] public string Listens => ListenSource.Parse(ListenSourceValue);
     [JsonIgnore] public bool ListensToRoom => Listens == ListenSource.Room;
     [JsonIgnore] public bool HearsBoth => Listens == ListenSource.Both;
-    /// "notes" (the notes window, default) or "subtitles" (the subtitle bar).
-    [JsonPropertyName("view")] public string View { get; set; } = "notes";
+    /// "bubble" (Snart's, default), "notes" (the notes window) or "subtitles" (the subtitle bar).
+    [JsonPropertyName("view")] public string View { get; set; } = "bubble";
     /// Whether 知了还在任务栏右下角 was shown, after the first × on a window.
     [JsonPropertyName("trayHintShown")] public bool TrayHintShown { get; set; }
     /// 共享屏幕时让对方看到: let the notes window and subtitles show up in screen sharing.

@@ -109,6 +109,8 @@ sealed class Controller
     TrayFlyout? flyout;
     Window? menuHost;
     NotesWindow? notesWindow;
+    /// Snart's bubble, shown while listening in place of the notes window (View "bubble").
+    LiveBubble? bubble;
     MainWindow? mainWindow;
     SettingsWindow? settingsWindow;
     Dispatcher Dispatch => application.Dispatcher;
@@ -142,7 +144,8 @@ sealed class Controller
         Listen = new ListenEngine(Ling, Translator, Store, Notes, Settings) { Pinned = () => Settings.Theirs };
         Speak = new SpeakEngine(Ling, Translator, Store, Settings, () => Listen.Spoken,
             () => Listen.Listening && Listen.SessionId is { } id && Store.Get(id) is { } s ? (id, s.StartedAt) : null, WindowsVoice);
-        Speak.Changed += () => Dispatch.BeginInvoke(() => { speakBar ??= new SpeakBar(this); speakBar.Refresh(); });
+        // Snart: the bubble says what the talk key is doing; the separate speak bar only without it.
+        Speak.Changed += () => Dispatch.BeginInvoke(() => { if (Settings.View == "bubble") { bubble?.Refresh(); return; } speakBar ??= new SpeakBar(this); speakBar.Refresh(); });
         Speak.Reference = OwnVoice;
         Speak.Eleven = Eleven;
         Listen.Voiceprint = new WinVoiceprint();
@@ -262,6 +265,7 @@ sealed class Controller
     {
         WatchProxy();
         notesWindow?.Refresh();
+        bubble?.Refresh();
         mainWindow?.Refresh();
         if (flyout?.IsVisible == true) flyout.Refresh();
         UpdateTray();
@@ -822,7 +826,7 @@ sealed class Controller
 
     // MARK: Speaking (同声传译)
 
-    public bool NotesVisible => notesWindow?.IsVisible == true;
+    public bool NotesVisible => notesWindow?.IsVisible == true || bubble?.IsVisible == true;
     /// Where the notes panel is on screen, when it shows as a panel: the talk bar keeps out of it.
     public Rect? NotesBounds => NotesVisible && Settings.View == "notes"
         ? new Rect(notesWindow!.Left, notesWindow.Top, notesWindow.ActualWidth, notesWindow.ActualHeight) : null;
@@ -1062,7 +1066,7 @@ sealed class Controller
 
     public void ToggleNotes()
     {
-        if (NotesVisible) notesWindow!.Hide(); else ShowNotes();
+        if (NotesVisible) { notesWindow?.Hide(); bubble?.Hide(); } else ShowNotes();
         Changed();
     }
 
@@ -1076,6 +1080,15 @@ sealed class Controller
 
     public void ShowNotes()
     {
+        if (Settings.View == "bubble")
+        {
+            notesWindow?.Hide();
+            bubble ??= new LiveBubble(this);
+            bubble.Show();
+            bubble.Refresh();
+            return;
+        }
+        bubble?.Hide();
         notesWindow ??= new NotesWindow(this);
         notesWindow.Show();
         notesWindow.Refresh();
@@ -1321,6 +1334,7 @@ sealed class Controller
     {
         Settings.View = view;
         Settings.Save();
+        if (NotesVisible) ShowNotes();
         if (notesWindow is null) return;
         notesWindow.Place();
         notesWindow.Refresh();

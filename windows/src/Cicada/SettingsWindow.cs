@@ -79,7 +79,7 @@ sealed partial class SettingsWindow : Window
         System.Windows.Automation.AutomationProperties.SetName(size, L("字幕文字大小"));
         size.ValueChanged += (_, e) => { app.Settings.SubtitleSize = (int)e.NewValue; Save(); };
         Section(page, "listen", L("听的时候"), Group(
-            Card(Icons.Subtitles, L("听的时候显示"), null, Ui.Segmented([("notes", L("纪要")), ("subtitles", L("字幕条"))], app.Settings.View, app.SetView)),
+            Card(Icons.Subtitles, L("听的时候显示"), null, Ui.Segmented([("bubble", "Bubble"), ("notes", L("纪要")), ("subtitles", L("字幕条"))], app.Settings.View, app.SetView)),
             Card(null, L("字幕文字大小"), null, size),
             Card(Icons.Keyboard, L("开始或结束"), app.HotkeyRegistered ? L("在任何程序里都能按") : L("这个快捷键被别的程序占用了"), Keys(Hotkey.Label))));
         Section(page, "speak", L("同声传译"), SpeakCards().ToArray());
