@@ -86,6 +86,20 @@ final class SpeakEngine {
     /// You talked, but the recognizer for your language caught next to nothing (`misheardVoiced`).
     var onMisheard: (() -> Void)?
     static let misheardVoiced = 1.5
+
+    /// Most of the words aren't words of `language` (macOS's spell checker): a recognizer for one
+    /// language hearing another writes sounds out as made-up words. Names are a word or two, so a
+    /// real sentence stays well under the line.
+    static func looksMisheard(_ text: String, language: String) -> Bool {
+        let words = text.split { !$0.isLetter && $0 != "'" }.map(String.init).filter { $0.count >= 3 }
+        guard words.count >= 4 else { return false }
+        let checker = NSSpellChecker.shared
+        let unknown = words.filter {
+            checker.checkSpelling(of: $0, startingAt: 0, language: language, wrap: false,
+                                  inSpellDocumentWithTag: 0, wordCount: nil).location != NSNotFound
+        }.count
+        return Double(unknown) / Double(words.count) >= 0.45
+    }
     /// Translator shared with the listening side.
     var translate: ((_ text: String, _ from: String, _ to: String, _ trace: TranslateTrace) async -> String?)?
     /// The press as a WAV → (what was said, translation); nil when Ming is unavailable or its reply is unusable.
@@ -764,6 +778,16 @@ final class SpeakEngine {
             // A good stretch of voice the model for your language barely understood: most likely you
             // spoke another one (Tamil with English chosen). Said once, so you can switch.
             if heard == nil, voiced >= Self.misheardVoiced, Double(text.count) / voiced < 4 { onMisheard?() }
+            // Fluent-looking nonsense is the other sign ("Anupidalama, Bagge, konjum" from Tamil heard as
+            // English): it would go out as nonsense in their language. Asked about, and not sent.
+            if heard == nil, !settings.speakFromLang.cloud, Self.looksMisheard(text, language: settings.speakFromLang.code) {
+                debugLog("speak: mostly not \(settings.speakFromLang.code) words, nothing sent")
+                onMisheard?()
+                phase = .idle
+                onLive?(.idle, "", "Didn't catch that in \(settings.speakFromLang.name): nothing sent")
+                probe?.finish()
+                return
+            }
             // Hands-free: a word or two is a noise Ming named (喂, 咳咳; the talk key is there for 好的),
             // and the meeting's own words are its echo.
             let short = EchoMatch.units(text).count < 3

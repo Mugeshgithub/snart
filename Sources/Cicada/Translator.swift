@@ -331,7 +331,8 @@ final class TranslationService {
         do {
             let priority: LingClient.Priority = kind == .speak ? .speak : kind == .file ? .notes : .translate
             let out = try await ling.chat(content: prompt, instruction: "Translate.", priority: priority,
-                                          maxTokens: 400, timeout: kind == .speak ? 10 : kind == .file ? 20 : 6,
+                                          // Tamil script takes about four times the tokens of English: 400 cut it off mid-answer.
+                                          maxTokens: target == "ta" ? 1500 : 400, timeout: kind == .speak ? 10 : kind == .file ? 20 : 6,
                                           role: kind == .file ? "file" : "translate",
                                           onQueued: { [weak trace] in trace?.lingQueue += $0 })
             if out.isEmpty { return (nil, "empty") }
