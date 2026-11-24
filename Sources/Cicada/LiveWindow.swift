@@ -71,6 +71,7 @@ struct LiveView: View {
         VStack(spacing: 0) {
             header
             Divider()
+            if settings.speakEnabled, let strip = micStrip { strip; Divider() }
             if model.running { transcript } else { idle }
             Divider()
             footer
@@ -204,6 +205,44 @@ struct LiveView: View {
                 .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
                 .padding(.leading, 32)
         }
+    }
+
+    // MARK: Call app microphone
+
+    /// Whether the call app takes its microphone from Snart: if it reads another mic, the other
+    /// side never hears the translation, and nothing else on screen would say so.
+    /// Apps people call from (browsers for Meet). Not Snart itself, nor a dictation app reading the
+    /// same virtual mic, which would read as "hears your translation" when nobody does.
+    static let callApps: Set<String> = MicUsers.meetingApps.union([
+        "net.whatsapp.WhatsApp", "com.apple.FaceTime", "com.tinyspeck.slackmacgap", "com.hnc.Discord",
+        "ru.keepcoder.Telegram", "org.whispersystems.signal-desktop", "com.skype.skype",
+        "com.google.Chrome", "com.apple.Safari", "company.thebrowser.Browser", "org.mozilla.firefox",
+        "com.microsoft.edgemac", "com.brave.Browser",
+    ])
+
+    private var micStrip: AnyView? {
+        let calls = model.micUsers.filter { Self.callApps.contains($0.bundleID) }
+        let wrong = calls.first { if case .otherMic = $0.state { return true } else { return false } }
+        if let wrong, case .otherMic(let device) = wrong.state {
+            return AnyView(strip(icon: "exclamationmark.triangle.fill", color: Palette.warn, fill: Palette.warnPale,
+                                 text: "\(wrong.name) is using \(device), so they can't hear your translation. In \(wrong.name), choose BlackHole 2ch as the microphone."))
+        }
+        if let ok = calls.first(where: { $0.state == .virtualMic }) {
+            return AnyView(strip(icon: "checkmark.circle.fill", color: Palette.ok, fill: Palette.okPale,
+                                 text: "\(ok.name) hears your translation"))
+        }
+        return nil
+    }
+
+    private func strip(icon: String, color: Color, fill: Color, text: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: icon).font(.system(size: 11)).foregroundStyle(color).padding(.top, 1)
+            Text(verbatim: text).font(.system(size: 11)).foregroundStyle(Palette.ink)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 14).padding(.vertical, 8)
+        .background(fill)
     }
 
     // MARK: Footer
