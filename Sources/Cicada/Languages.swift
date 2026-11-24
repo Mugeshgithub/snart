@@ -38,15 +38,17 @@ func translationCode(forSystemLanguage id: String) -> String {
 /// app speaks Chinese), otherwise the first system language. Subtitles, notes and speak-back
 /// all start from this one answer, so they never disagree.
 func myLanguage(systemLanguages prefs: [String]) -> String {
-    // Cognivex Interpreter: the reader's language is English, whatever the Mac lists.
-    "en"
+    // Cognivex Interpreter: yours is the language you speak (English unless you switched to French),
+    // whatever the Mac lists.
+    UserDefaults.standard.string(forKey: "speakFrom")?.hasPrefix("fr") == true ? "fr" : "en"
 }
 
 /// What "follow system" translates into: my language, unless that is what they speak; then the
 /// next system language, or between Chinese and English when the system has only one.
 func followSystemTarget(source: String?, systemLanguages prefs: [String]) -> String {
-    // English and French only: English heard is shown in French, everything else in English.
-    source == "en" ? "fr" : "en"
+    // English and French only: shown in yours, unless they speak it too; then in the other one.
+    let mine = myLanguage(systemLanguages: prefs)
+    return source == mine ? (mine == "en" ? "fr" : "en") : mine
 }
 
 /// The languages "auto" most likely hears, most likely first: the last one detected, the Mac's

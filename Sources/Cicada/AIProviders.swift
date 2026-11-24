@@ -148,6 +148,14 @@ struct AIConfig: Equatable {
     /// nil: a custom service without a valid address yet.
     var base: URL?
     var textModel: String
+    /// What live lines and your own sentences are translated with: Claude's fastest model when a
+    /// larger Claude is chosen (Opus thinks first, seconds a sentence), else the chosen one. Notes
+    /// keep `textModel`, where the time doesn't show.
+    var liveModel: String {
+        let claude = provider.id == .anthropic || textModel.hasPrefix("anthropic/")
+        guard claude, !textModel.contains("haiku") else { return textModel }
+        return provider.id == .anthropic ? "claude-haiku-5-5" : "anthropic/claude-haiku-5.5"
+    }
     /// nil: no voices with this service (the Mac's speak).
     var voiceModel: String?
     var voiceBase: URL?

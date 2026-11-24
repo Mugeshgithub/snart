@@ -14,6 +14,13 @@ enum TranslateFailure: Error {
 }
 
 struct GoogleTranslator {
+    static func warm() {
+        var req = URLRequest(url: URL(string: "https://translate.googleapis.com/")!)
+        req.httpMethod = "HEAD"
+        req.timeoutInterval = 5
+        Task { _ = try? await URLSession.shared.data(for: req) }
+    }
+
     static func translate(_ text: String, source: String, target: String) async throws -> String {
         var comps = URLComponents(string: "https://translate.googleapis.com/translate_a/single")!
         comps.queryItems = [
@@ -196,6 +203,9 @@ final class TranslationService {
             trace?.attempts.append(.init(provider: ling.provider.id.rawValue, seconds: 0, failure: "simulated"))
             return nil
         }
+        if kind == .speak, ling.usable, lingWorthTrying(), !googleOff, google.open() {
+            return await race(text, source: source, target: target, trace: trace)
+        }
         if kind != .draft, ling.usable, lingWorthTrying() {
             let started = Date()
             let (out, failure) = await viaLing(text, source: source, target: target, kind: kind, trace: trace)
@@ -239,6 +249,53 @@ final class TranslationService {
             return out
         }
         trace?.attempts.append(.init(provider: "apple", seconds: Date().timeIntervalSince(started), failure: "unavailable"))
+        return nil
+    }
+
+    /// What you say, in a conversation: the AI service and Google start together. The AI's wording
+    /// when it answers within `aiWait`; else Google's (about 0.4 s), so the other side never waits
+    /// on a model that is thinking. Still never the untranslated text: a sentence neither answered
+    /// goes to on-device translation, then nowhere.
+    static let aiWait = 0.8
+
+    private func race(_ text: String, source: String, target: String, trace: TranslateTrace?) async -> String? {
+        let started = Date()
+        let provider = ling.provider.id.rawValue
+        let ai = Task { await self.viaLing(text, source: source, target: target, kind: .speak, trace: nil).0 }
+        let fast = Task { () -> String? in
+            do { return try await GoogleTranslator.translate(text, source: source, target: target) } catch {
+                debugLog("translate google failed: \(error)")
+                return nil
+            }
+        }
+        // Outer nil: the wait ran out with the AI still working.
+        let early: String?? = await withTaskGroup(of: String??.self) { group in
+            group.addTask { await ai.value }
+            group.addTask {
+                try? await Task.sleep(for: .seconds(Self.aiWait))
+                return .none
+            }
+            let first = await group.next() ?? .none
+            group.cancelAll()
+            return first
+        }
+        func done(_ out: String, _ via: String) -> String {
+            trace?.attempts.append(.init(provider: via, seconds: Date().timeIntervalSince(started), failure: nil))
+            debugLog(String(format: "translate via=%@ kind=speak race %.2f s", via, Date().timeIntervalSince(started)))
+            return out
+        }
+        if case .some(.some(let out)) = early {
+            fast.cancel()
+            return done(out, provider)
+        }
+        if let out = await fast.value {
+            googleAnswered()
+            return done(out, "google")
+        }
+        // Google failed too: the AI's answer is still worth waiting for.
+        if case .none = early, let out = await ai.value { return done(out, provider) }
+        trace?.attempts.append(.init(provider: provider, seconds: Date().timeIntervalSince(started), failure: "slow"))
+        if let out = await viaApple(text, source: source, target: target) { return done(out, "apple") }
         return nil
     }
 

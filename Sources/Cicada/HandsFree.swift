@@ -9,8 +9,8 @@ struct HandsFreeDetector {
         /// Seconds of voice before a sentence starts (gaps under `bridge` don't reset it).
         var onset = 0.1
         var bridge = 0.15
-        /// Quiet that ends a sentence.
-        var hangover = 1.0
+        /// Quiet that ends a sentence: 0.7 s keeps a conversation moving and still lets you breathe mid-sentence.
+        var hangover = 0.7
         /// A sentence is cut here (Ming takes a sentence or two; the next one starts at once).
         var longest = 20.0
         /// The voice must be this many times the room's floor, and at least `lowest`.

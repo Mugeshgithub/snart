@@ -24,7 +24,7 @@ import Testing
         #expect(began[0].1 - 3 < 0.15)
         let ended = feed(&d, 0.0005, 1.5, clock: &t)
         #expect(ended.count == 1 && ended[0].0 == .ended(cut: false))
-        #expect(abs(ended[0].1 - 6) < 0.05)
+        #expect(abs(ended[0].1 - (5 + HandsFreeDetector.Tuning.standard.hangover)) < 0.05)
     }
 
     @Test func nothingStartsBeforeTheFloorIsKnown() {

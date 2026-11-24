@@ -623,7 +623,7 @@ final class LingClient: ObservableObject {
         let host = Self.server(c.base)
         let gate = gate(c.base)
         let generation = settingsGeneration
-        let call = CallLabel(provider: c.provider.id.rawValue, model: model ?? c.textModel,
+        let call = CallLabel(provider: c.provider.id.rawValue, model: model ?? (priority == .notes ? c.textModel : c.liveModel),
                              role: role ?? (priority == .notes ? "notes" : "translate"))
         var body: [String: Any] = [
             "model": call.model,
@@ -930,6 +930,16 @@ final class LingClient: ObservableObject {
         d.append(file)
         d.append(Data("\r\n--\(boundary)--\r\n".utf8))
         return d
+    }
+
+    /// Opens the connection to the service before it is needed (`SpeakEngine.onWarm`): the TLS
+    /// handshake otherwise adds 0.1–0.3 s to the first sentence after a quiet spell.
+    func warm() {
+        guard let base = config().base else { return }
+        var req = URLRequest(url: base)
+        req.httpMethod = "HEAD"
+        req.timeoutInterval = 5
+        Task { _ = try? await session.data(for: req) }
     }
 
     // MARK: Transport

@@ -171,6 +171,7 @@ final class AppModel: ObservableObject {
     lazy var notesWindow = NotesWindowController(model: self)
     /// The one window this build shows: live lines, start and stop, the talk key (`LiveWindow.swift`).
     lazy var liveWindow = LiveWindowController(model: self)
+    private var warmedAt = Date.distantPast
     /// The line being heard, before it is final.
     @Published private(set) var draft = LiveDraft()
     lazy var importer = FileImporter(store: store, settings: settings, translator: translator, profiles: profiles)
@@ -393,6 +394,14 @@ final class AppModel: ObservableObject {
         roomListen.roomDevice = roomMic
         applyVoice()
         speak.onStatus = { [weak self] text in self?.status = text }
+        speak.onWarm = { [weak self] in
+            // Connections idle out after a while: at most once every 20 s is enough to keep them open.
+            guard let self, Date().timeIntervalSince(self.warmedAt) > 20 else { return }
+            self.warmedAt = Date()
+            self.ling.warm()
+            ElevenLabs.warm()
+            if !self.translator.googleOff { GoogleTranslator.warm() }
+        }
         speak.onNotice = { [weak self] text in self?.speakNotice(text) }
         speak.onLive = { [weak self] phase, src, dst in
             guard let self else { return }
@@ -1092,6 +1101,20 @@ final class AppModel: ObservableObject {
             refresh()
             objectWillChange.send()
         }
+    }
+
+    /// The one language switch: which of English and French is yours. Theirs is the other one;
+    /// you read yours, and what you say goes out in theirs.
+    var speaksFrench: Bool { settings.speakFrom.hasPrefix("fr") }
+
+    func setSpeaksFrench(_ french: Bool) {
+        guard french != speaksFrench else { return }
+        settings.speakFrom = french ? "fr-FR" : "en-US"
+        settings.speakTo = french ? "en" : "fr"
+        sourceSelection = french ? "en-US" : "fr-FR"
+        targetSelection = french ? "fr" : "en"
+        speakFromChanged()
+        debugLog("direction: you speak \(french ? "French" : "English")")
     }
 
     func enableSpeaking(_ on: Bool) {
@@ -2415,7 +2438,7 @@ final class AppModel: ObservableObject {
             }
         case "liveRender":
             // liveRender:<png>: the live window, which screen capture can't see (sharingType none).
-            let r = ImageRenderer(content: LiveView(model: self, store: store).frame(width: 380, height: 460))
+            let r = ImageRenderer(content: LiveView(model: self, store: store, settings: settings).frame(width: 380, height: 460))
             r.scale = 2
             if let img = r.nsImage, let tiff = img.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff) {
                 try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: arg))
@@ -2514,6 +2537,8 @@ final class AppModel: ObservableObject {
         case "speakOff": enableSpeaking(false)
         case "speakOut": speak.debugOutputURL = arg.isEmpty ? nil : URL(fileURLWithPath: arg)
         case "speakFile": speak.speakFile(URL(fileURLWithPath: arg))
+        // direction:fr|en: which of English and French you speak (the live window's EN ⇄ FR chip).
+        case "direction": setSpeaksFrench(arg == "fr")
         // talkDown / talkUp: the talk key held and let go, with the real microphone (audio tests).
         // handsFree:on|off: 不用按键, as the setting.
         case "handsFree": settings.speakHandsFree = arg != "off"

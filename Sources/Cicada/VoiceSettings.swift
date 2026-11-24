@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// Settings › 声音, the whole of interpreting in this build: the virtual mic (until it is
-/// installed), the talk key, and the user's own ElevenLabs voice. The languages are fixed to
-/// English → French, so nothing else is asked.
+/// installed), which of English and French is yours, the talk key or hands-free, and the user's
+/// own ElevenLabs voice.
 struct VoiceSettings: View {
     @ObservedObject var model: AppModel
     @ObservedObject var settings: AppSettings
@@ -20,8 +20,18 @@ struct VoiceSettings: View {
                 SettingsCard { MicSetupCard(installer: installer, deviceName: nil) }
             }
             SettingsCard {
-                SettingsRow(title: L("按住说话"), detail: L("你说英语，对方听到法语"), divider: false) {
-                    ShortcutField(model: model, role: .talk)
+                SettingsRow(title: "I speak", detail: model.speaksFrench ? "You read French; they hear you in English"
+                                                                         : "You read English; they hear you in French") {
+                    Segments(options: [("en", "English"), ("fr", "French")], value: model.speaksFrench ? "fr" : "en") {
+                        model.setSpeaksFrench($0 == "fr")
+                    }
+                    .fixedSize()
+                }
+                SettingsRow(title: "Hold to talk") { ShortcutField(model: model, role: .talk) }
+                SettingsRow(title: "Hands-free", detail: "No key: it speaks for you after a short pause. Best with headphones.",
+                            divider: false) {
+                    Toggle("Hands-free", isOn: $settings.speakHandsFree)
+                        .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.ink)
                 }
             }
             Text("ElevenLabs").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.secondary)
@@ -41,7 +51,7 @@ struct VoiceSettings: View {
                 Spacer()
                 if ready {
                     SoftButton(model.previewing == ElevenLabs.id ? L("播放中…") : L("试听")) {
-                        model.previewVoice(ElevenLabs.id, language: "fr")
+                        model.previewVoice(ElevenLabs.id, language: model.speaksFrench ? "en" : "fr")
                     }
                     .disabled(model.previewing != nil)
                 }

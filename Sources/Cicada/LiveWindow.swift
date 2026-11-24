@@ -37,7 +37,7 @@ final class LiveWindowController: NSObject, NSWindowDelegate {
             p.minSize = NSSize(width: 320, height: 260)
             p.backgroundColor = .white
             p.delegate = self
-            p.contentView = FirstClickHostingView(rootView: LiveView(model: model, store: model.store))
+            p.contentView = FirstClickHostingView(rootView: LiveView(model: model, store: model.store, settings: model.settings))
             p.setFrameAutosaveName(Self.autosave)
             if !p.setFrameUsingName(Self.autosave), let screen = NSScreen.main?.visibleFrame {
                 p.setFrameOrigin(NSPoint(x: screen.maxX - 400, y: screen.maxY - 480))
@@ -63,6 +63,7 @@ struct LiveDraft: Equatable {
 struct LiveView: View {
     @ObservedObject var model: AppModel
     @ObservedObject var store: SessionStore
+    @ObservedObject var settings: AppSettings
 
     private var session: Session? { store.session(store.liveID) }
 
@@ -83,7 +84,7 @@ struct LiveView: View {
     private var header: some View {
         HStack(spacing: 8) {
             BrandMark(size: 20)
-            Text(verbatim: "Cognivex").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.ink)
+            direction
             Spacer()
             if model.running {
                 HStack(spacing: 5) {
@@ -108,12 +109,35 @@ struct LiveView: View {
         .padding(.leading, 74).padding(.trailing, 12).frame(height: 40)
     }
 
+    private var mine: String { model.speaksFrench ? "FR" : "EN" }
+    private var theirs: String { model.speaksFrench ? "EN" : "FR" }
+    private var theirName: String { model.speaksFrench ? "English" : "French" }
+
+    /// Which language is yours, flipped in one click: "EN → FR" is you speaking English to French.
+    private var direction: some View {
+        Button { model.setSpeaksFrench(!model.speaksFrench) } label: {
+            HStack(spacing: 5) {
+                Text(verbatim: mine).font(.system(size: 11, weight: .semibold))
+                Image(systemName: "arrow.left.arrow.right").font(.system(size: 9, weight: .semibold))
+                Text(verbatim: theirs).font(.system(size: 11, weight: .semibold))
+            }
+            .foregroundStyle(Palette.ink)
+            .padding(.horizontal, 9).frame(height: 22)
+            .background(Capsule().fill(Palette.raised))
+            .overlay(Capsule().stroke(Palette.line, lineWidth: 1))
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .help("You speak \(model.speaksFrench ? "French" : "English"), they hear \(theirName). Click to switch.")
+    }
+
     // MARK: Body
 
     private var idle: some View {
         VStack(spacing: 14) {
             Spacer()
-            Text(verbatim: "They speak French, you read English.\nYou speak English, they hear French.")
+            Text(verbatim: model.speaksFrench ? "They speak English, you read French.\nYou speak French, they hear English."
+                                              : "They speak French, you read English.\nYou speak English, they hear French.")
                 .font(.system(size: 13)).foregroundStyle(Palette.secondary).multilineTextAlignment(.center)
             Button { model.setRunning(true) } label: {
                 Text(verbatim: "Start listening").font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
@@ -141,7 +165,7 @@ struct LiveView: View {
                     }
                     ForEach(lines) { line in row(line) }
                     if !model.draft.src.isEmpty {
-                        pair(label: "FR", src: model.draft.src, dst: model.draft.dst, me: false).opacity(0.6)
+                        pair(label: theirs, src: model.draft.src, dst: model.draft.dst, me: false).opacity(0.6)
                     }
                     Color.clear.frame(height: 1).id("end")
                 }
@@ -206,10 +230,14 @@ struct LiveView: View {
 
     private var speakLine: String {
         switch model.speakPhase {
-        case .idle: return "Hold right ⌥ to speak French"
+        case .idle:
+            if settings.speakHandsFree {
+                return model.running ? "Hands-free: just talk, they hear \(theirName)" : "Hands-free starts when you start listening"
+            }
+            return "Hold right ⌥ to speak \(theirName)"
         case .listening: return model.liveSource.isEmpty ? "Listening to you…" : model.liveSource
         case .translating: return "Translating…"
-        case .speaking: return model.liveTranslation.isEmpty ? "Speaking French…" : model.liveTranslation
+        case .speaking: return model.liveTranslation.isEmpty ? "Speaking \(theirName)…" : model.liveTranslation
         }
     }
 }

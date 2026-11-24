@@ -34,6 +34,15 @@ enum ElevenLabs {
         VoiceOption(id: id, name: L("我的声音"), tags: ["ElevenLabs"], kind: .cloud("eleven"))
     }
 
+    /// Opens the connection while you are still talking, so the voice's first chunk doesn't wait on a handshake.
+    static func warm() {
+        guard configured, let url = URL(string: "https://api.elevenlabs.io/v1/models") else { return }
+        var req = URLRequest(url: url)
+        req.httpMethod = "HEAD"
+        req.timeoutInterval = 5
+        Task { _ = try? await URLSession.shared.data(for: req) }
+    }
+
     /// `text` as raw 24 kHz mono 16-bit PCM chunks, the format `SpeakEngine` plays a stream in.
     static func speech(_ text: String) -> AsyncThrowingStream<Data, Error> {
         AsyncThrowingStream { cont in

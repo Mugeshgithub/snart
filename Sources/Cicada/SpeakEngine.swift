@@ -78,6 +78,8 @@ final class SpeakEngine {
     var onLive: ((_ phase: Phase, _ source: String, _ translation: String) -> Void)?
     /// A finished utterance for the meeting record.
     var onUtterance: ((_ source: String, _ translation: String, _ from: String, _ to: String, _ secondsAgo: Double) -> Void)?
+    /// You started talking: the services a sentence goes through can open their connections now.
+    var onWarm: (() -> Void)?
     var onStatus: ((String) -> Void)?
     /// Why a press of the talk key went nowhere: shown while the key is held.
     var onNotice: ((String) -> Void)?
@@ -305,6 +307,7 @@ final class SpeakEngine {
     }
 
     private func voiceBegan() {
+        onWarm?()
         if phase == .idle { onLive?(.listening, "", "") }
     }
 
@@ -482,6 +485,7 @@ final class SpeakEngine {
             return
         }
         debugLog("speak: press began")
+        onWarm?()
         pressStarted = Date()
         pressHandsFree = false
         phase = .listening
