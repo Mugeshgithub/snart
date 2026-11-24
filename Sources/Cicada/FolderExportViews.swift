@@ -18,7 +18,7 @@ struct FolderExportSettings: View {
                         else if let folder = exporter.folder { exporter.choose(folder) }
                         else { choosing = true }
                     }))
-                    .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.ink)
+                    .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.brand)
                 }
                 if exporter.on, let folder = exporter.folder {
                     if exporter.checking {

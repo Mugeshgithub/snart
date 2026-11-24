@@ -34,7 +34,7 @@ struct VoiceSettings: View {
                 SettingsRow(title: "Hands-free", detail: "No key: it speaks for you after a short pause. Best with headphones.",
                             divider: false) {
                     Toggle("Hands-free", isOn: $settings.speakHandsFree)
-                        .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.ink)
+                        .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.brand)
                 }
             }
             Text("ElevenLabs").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.secondary)

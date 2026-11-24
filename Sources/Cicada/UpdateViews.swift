@@ -68,11 +68,11 @@ struct AppRows: View {
         SettingsCard {
             SettingsRow(title: L("登录时打开"), detail: loginDetail) {
                 Toggle("登录时打开", isOn: Binding(get: { loginItem.enabled }, set: { loginItem.set($0) }))
-                    .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.ink)
+                    .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.brand)
             }
             SettingsRow(title: L("在 Dock 中显示"), detail: L("关掉后只在菜单栏，打开窗口时才出现")) {
                 Toggle("在 Dock 中显示", isOn: Binding(get: { model.settings.showInDock }, set: { model.settings.showInDock = $0 }))
-                    .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.ink)
+                    .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.brand)
             }
             // Snart has no release feed yet (`UpdateChecker.start`): the version, nothing to check.
             SettingsRow(title: L("版本 \(Updates.current)")) { EmptyView() }

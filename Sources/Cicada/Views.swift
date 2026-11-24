@@ -15,6 +15,8 @@ enum Palette {
     /// Highlighter behind numbers and dates in the conclusions.
     static let mark = Color(red: 1.0, green: 0.906, blue: 0.639)
     static let accent = Color(red: 0.91, green: 0.33, blue: 0.17)
+    /// Snart's blue (the logo's outer ring): switches, selection and primary buttons.
+    static let brand = Color(red: 0.23, green: 0.51, blue: 0.96)
     static let accentInk = Color(red: 0.70, green: 0.23, blue: 0.08)
     static let accentPale = Color(red: 0.99, green: 0.93, blue: 0.906)
     /// Controls, chips, search fields.
@@ -214,7 +216,7 @@ struct MenuPanelView: View {
                 }
                 Spacer()
                 Toggle("字幕", isOn: Binding(get: { model.running }, set: { model.setRunning($0) }))
-                    .toggleStyle(.switch).labelsHidden().tint(Palette.ink)
+                    .toggleStyle(.switch).labelsHidden().tint(Palette.brand)
             }
 
             if let p = model.ending { MeetingEndingStrip(model: model, pending: p, compact: true) }
@@ -360,7 +362,7 @@ struct PanelImportLine: View {
         if let job = importer.current {
             let name = store.session(job.id)?.displayTitle ?? job.url.lastPathComponent
             HStack(spacing: 6) {
-                ProgressView(value: importer.progress).progressViewStyle(.circular).controlSize(.mini).tint(Palette.ink)
+                ProgressView(value: importer.progress).progressViewStyle(.circular).controlSize(.mini).tint(Palette.brand)
                     .frame(width: 10, height: 10)
                 Text(importer.queue.isEmpty ? L("后台转写 \(name) · \(Int(importer.progress * 100))%")
                      : L("后台转写 \(name) · \(Int(importer.progress * 100))%，还有 \(importer.queue.count) 个"))

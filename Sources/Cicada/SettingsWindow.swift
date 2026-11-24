@@ -38,13 +38,14 @@ enum SettingsSection: String, CaseIterable, Identifiable {
 
 // MARK: - Building blocks
 
-/// A white card of rows separated by hairlines, like System Settings.
+/// A card of rows separated by hairlines, in the bubble's glass: frosted white, a light rim.
 struct SettingsCard<Content: View>: View {
     @ViewBuilder var content: Content
     var body: some View {
         VStack(spacing: 0) { content }
-            .background(RoundedRectangle(cornerRadius: 12).fill(Color.white))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Palette.line, lineWidth: 1))
+            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.white.opacity(0.7)))
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Color.white.opacity(0.95), lineWidth: 0.8))
+            .shadow(color: Color(red: 0.23, green: 0.51, blue: 0.96).opacity(0.05), radius: 8, y: 2)
     }
 }
 
@@ -159,7 +160,7 @@ struct SoftButton: View {
             Text(title).font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(dark ? Color.white : Palette.ink)
                 .padding(.horizontal, 12).frame(height: 28)
-                .background(RoundedRectangle(cornerRadius: 7).fill(dark ? Palette.ink : onGrey ? Color.white : Color(white: 0.925)))
+                .background(Capsule().fill(dark ? Palette.brand : onGrey ? Color.white : Color.white.opacity(0.8)))
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -428,9 +429,8 @@ struct SettingsView: View {
             ScrollView { page }
         }
         .frame(width: 720, height: 600)
-        // The bubble's tint: white into a faint blue, so settings read as part of the same app.
-        .background(LinearGradient(colors: [Color(white: 0.985), Color(red: 0.925, green: 0.945, blue: 0.99)],
-                                   startPoint: .top, endPoint: .bottom))
+        // The bubble's glass, so settings read as part of the same app; under the title bar too.
+        .background(DropBackground(radius: 0).ignoresSafeArea())
     }
 
     /// The current section without the scroll view (also drawn by the `settingsRender` debug command).
@@ -442,7 +442,7 @@ struct SettingsView: View {
                 if model.settingsSection == .ai { AIServiceMenu(model: model, settings: settings) }
                 if model.settingsSection == .speak {
                     Toggle("把我说的翻译给对方", isOn: Binding(get: { settings.speakEnabled }, set: { model.enableSpeaking($0) }))
-                        .toggleStyle(.switch).labelsHidden().tint(Palette.ink)
+                        .toggleStyle(.switch).labelsHidden().tint(Palette.brand)
                 }
             }
             switch model.settingsSection {
@@ -464,13 +464,10 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 2) {
             ForEach(SettingsSection.simple) { s in
                 let on = s == model.settingsSection
-                if s == .diagnostics {
-                    Rectangle().fill(Palette.line).frame(height: 1).padding(.horizontal, 10).padding(.vertical, 6)
-                }
                 Button { model.settingsSection = s } label: {
                     HStack(spacing: 10) {
                         Image(systemName: s.icon).font(.system(size: 13))
-                            .foregroundStyle(on ? Palette.accent : Palette.secondary).frame(width: 18)
+                            .foregroundStyle(on ? Palette.brand : Palette.secondary).frame(width: 18)
                         Text(s.title).font(.system(size: 13, weight: on ? .semibold : .regular)).foregroundStyle(Palette.ink)
                         Spacer()
                         if s == .speak && settings.speakEnabled && model.virtualMic == nil {
@@ -478,21 +475,39 @@ struct SettingsView: View {
                         }
                     }
                     .padding(.horizontal, 10).frame(height: 32)
-                    .background(RoundedRectangle(cornerRadius: 8).fill(on ? Color.white : .clear))
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(on ? Palette.line : .clear, lineWidth: 1))
+                    .background(Capsule().fill(on ? Color.white.opacity(0.75) : .clear))
+                    .overlay(Capsule().strokeBorder(on ? Color.white : .clear, lineWidth: 0.8))
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
             Spacer()
-            HStack(spacing: 8) {
-                Spacer()
-                Text(Self.version).font(.system(size: 11).monospacedDigit()).foregroundStyle(Palette.tertiary).fixedSize()
-            }
-            .padding(.horizontal, 10).padding(.top, 10)
-            .overlay(alignment: .top) { Rectangle().fill(Palette.line).frame(height: 1) }
+            badge
         }
         .padding(.horizontal, 10).padding(.top, 44).padding(.bottom, 14)
+    }
+
+    /// Who this is, in the bubble's style: the mark, the name and its version in a glass bead.
+    private var badge: some View {
+        HStack(spacing: 8) {
+            BrandMark(size: 22)
+            VStack(alignment: .leading, spacing: 1) {
+                HStack(spacing: 6) {
+                    Text(verbatim: "Snart").font(.system(size: 13, weight: .semibold, design: .rounded)).foregroundStyle(Palette.ink)
+                    Text(verbatim: "v" + Self.version).font(.system(size: 9.5, weight: .semibold).monospacedDigit())
+                        .lineLimit(1).fixedSize()
+                        .foregroundStyle(Palette.brand)
+                        .padding(.horizontal, 6).frame(height: 16)
+                        .background(Capsule().fill(Palette.brand.opacity(0.1)))
+                }
+                Text(verbatim: "by CognivexAI").font(.system(size: 10)).foregroundStyle(Palette.secondary).lineLimit(1)
+            }
+            .fixedSize()
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 10).padding(.vertical, 8)
+        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.white.opacity(0.6)))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.white.opacity(0.95), lineWidth: 0.8))
     }
 
     private static let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
@@ -515,7 +530,7 @@ struct SettingsView: View {
                             detail: !settings.speakHandsFree ? L("开口就翻译，停顿 1 秒后说出去")
                                 : settings.hearsRoom ? L("打开麦克风时暂停") : model.running ? L("开口就翻译，停顿 1 秒后说出去") : L("开始听会议后生效")) {
                     Toggle("不用按键", isOn: $settings.speakHandsFree)
-                        .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.ink)
+                        .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.brand)
                 }
                 SettingsRow(title: L("说\(settings.speakFromLang.name)，对方听到")) {
                     PillMenu(value: settings.speakTo == "room" ? L("跟随对方（\(targetName(model.speak.targetCode))）") : targetName(settings.speakTo),
@@ -669,7 +684,7 @@ struct SettingsView: View {
         return group(L("麦克风")) {
             SettingsRow(title: L("打开时把系统麦克风换成 \(virtual)")) {
                 Toggle("自动切换系统麦克风", isOn: Binding(get: { settings.autoSystemMic }, set: { model.setAutoSystemMic($0) }))
-                    .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.ink)
+                    .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.brand)
             }
             SettingsRow(title: L("\(appDisplayName)听你说话用")) {
                 PillMenu(value: chosen ?? (auto.map { L("自动（\($0)）") } ?? L("自动")),
@@ -734,24 +749,24 @@ struct SettingsView: View {
             SettingsCard {
                 SettingsRow(title: L("保存会议录音"), detail: L("只存在这台 Mac 上")) {
                     Toggle("保存会议录音", isOn: $settings.recordAudio)
-                        .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.ink)
+                        .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.brand)
                 }
                 SettingsRow(title: L("开始听时打开麦克风"), detail: L("关掉后只听电脑声音；开会时再手动打开")) {
                     Toggle("开始听时打开麦克风", isOn: $settings.autoMicOnStart)
-                        .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.ink)
+                        .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.brand)
                 }
                 SettingsRow(title: L("说话人识别"), detail: L("按声音标出说话人 1、2…，只在这台 Mac 上处理")) {
                     Toggle("说话人识别", isOn: $settings.speakerVoices)
-                        .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.ink)
+                        .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.brand)
                 }
                 SettingsRow(title: L("每句都显示说话人"), detail: L("连续同一个人说话时也重复标出，不再只在换人时标")) {
                     Toggle("每句都显示说话人", isOn: $settings.speakerEveryLine)
-                        .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.ink)
+                        .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.brand)
                         .disabled(!settings.speakerVoices)
                 }
                 SettingsRow(title: L("记住说话人"), detail: L("按本机声纹认出以前见过的人；不会上传声音")) {
                     Toggle("记住说话人", isOn: $settings.speakerMemory)
-                        .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.ink)
+                        .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.brand)
                 }
                 SettingsRow(title: L("人员库"), detail: L("\(model.speakerProfiles.count) 个人 · 声纹和备注")) {
                     SoftButton(L("管理")) { model.speakerLibraryShown = true }
@@ -775,14 +790,14 @@ struct SettingsView: View {
                             detail: Recognition.cloudOnly ? L("导入转写和生成纪要都需要 Ling key") : L("需要 Ling key；没有也能转出文字记录"),
                             divider: false) {
                     Toggle("转完后生成纪要", isOn: $settings.importNotes)
-                        .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.ink)
+                        .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.brand)
                 }
             }
             Text("结束会议").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.secondary).padding(.top, 4)
             SettingsCard {
                 SettingsRow(title: L("会议应用挂断后结束"), detail: L("Zoom、腾讯会议、飞书、Teams 等")) {
                     Toggle("会议应用挂断后结束", isOn: $settings.endWithApp)
-                        .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.ink)
+                        .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.brand)
                 }
                 SettingsRow(title: L("没人说话时"), detail: L("按识别出的话算，背景音乐不算"), divider: settings.silenceEnd != "off") {
                     Segments(options: [("prompt", L("提醒后结束")), ("end", L("直接结束")), ("off", L("一直记录"))],
