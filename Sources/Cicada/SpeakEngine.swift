@@ -83,6 +83,9 @@ final class SpeakEngine {
     var onStatus: ((String) -> Void)?
     /// Why a press of the talk key went nowhere: shown while the key is held.
     var onNotice: ((String) -> Void)?
+    /// You talked, but the recognizer for your language caught next to nothing (`misheardVoiced`).
+    var onMisheard: (() -> Void)?
+    static let misheardVoiced = 1.5
     /// Translator shared with the listening side.
     var translate: ((_ text: String, _ from: String, _ to: String, _ trace: TranslateTrace) async -> String?)?
     /// The press as a WAV → (what was said, translation); nil when Ming is unavailable or its reply is unusable.
@@ -758,6 +761,9 @@ final class SpeakEngine {
             let heard = await (early ?? startMing()).value
             debugLog("speak: on-device heard \(text.count) chars, Ming \(heard.map { "\($0.original.count)" } ?? "-") chars")
             if let heard { text = heard.original }
+            // A good stretch of voice the model for your language barely understood: most likely you
+            // spoke another one (Tamil with English chosen). Said once, so you can switch.
+            if heard == nil, voiced >= Self.misheardVoiced, Double(text.count) / voiced < 4 { onMisheard?() }
             // Hands-free: a word or two is a noise Ming named (喂, 咳咳; the talk key is there for 好的),
             // and the meeting's own words are its echo.
             let short = EchoMatch.units(text).count < 3

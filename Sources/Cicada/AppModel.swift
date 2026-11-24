@@ -413,6 +413,11 @@ final class AppModel: ObservableObject {
             if !self.translator.googleOff { GoogleTranslator.warm() }
         }
         speak.onNotice = { [weak self] text in self?.speakNotice(text) }
+        speak.onMisheard = { [weak self] in
+            guard let self else { return }
+            self.misheardAt = Date()
+            debugLog("speak: little understood in \(self.myCode), asking if another language")
+        }
         speak.onLive = { [weak self] phase, src, dst in
             guard let self else { return }
             self.muteRoomWhileSpeaking(phase)
@@ -847,6 +852,10 @@ final class AppModel: ObservableObject {
 
     /// The menu (⌘R) and the panel switch: a meeting with lines is ended only after asking, with
     /// "继续记录" as the default so a stray Return keeps it going. An empty one just stops.
+    /// When your last sentence was barely understood in your language (the bubble asks if you
+    /// speak another one); cleared by switching or after a while.
+    @Published var misheardAt: Date?
+
     /// Ending asks in the bubble ("End meeting? Keep going | End"), not in an alert window.
     @Published var endAsked = false
 
@@ -2931,7 +2940,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
             let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1220, height: 740),
                              styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
                              backing: .buffered, defer: false)
-            w.title = appDisplayName
+            w.title = "Snart · Past meetings"
+            w.isOpaque = false
+            w.backgroundColor = .clear
             w.titlebarAppearsTransparent = true
             w.titleVisibility = .hidden
             w.isReleasedWhenClosed = false
@@ -2939,8 +2950,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
             w.delegate = self
             w.contentView = NSHostingView(rootView: MainWindowView(model: model, store: model.store, settings: model.settings,
                                                                    importer: model.importer))
-            w.toolbar = mainToolbar.make()
-            w.toolbarStyle = .unified
+            // No listening pill here: the bubble starts and stops listening. This window is the archive.
             w.titlebarSeparatorStyle = .none
             w.center()
             w.setFrameAutosaveName("LiveSubsMain")

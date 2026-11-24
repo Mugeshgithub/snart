@@ -120,6 +120,7 @@ struct LiveView: View {
         VStack(spacing: 8) {
             header
             if settings.speakEnabled, let strip = micStrip { strip }
+            if let at = model.misheardAt, Date().timeIntervalSince(at) < 20 { misheardStrip }
             if showNotes { notesView } else if model.running { transcript } else { idle }
             footer
         }
@@ -345,6 +346,37 @@ struct LiveView: View {
                                  text: "\(ok.name) hears your translation"))
         }
         return nil
+    }
+
+    /// "Didn't catch any English": a one-click switch of your language, or dismiss.
+    private var misheardStrip: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "questionmark.bubble").font(.system(size: 10)).foregroundStyle(Palette.warn)
+            Text(verbatim: "Didn't catch any \(myName). Speaking another language?").font(.system(size: 10.5))
+                .foregroundStyle(Palette.ink).lineLimit(2)
+            Spacer(minLength: 4)
+            Menu {
+                ForEach(sourceLanguages.filter { $0.code != model.myCode }, id: \.code) { l in
+                    Button("I speak \(l.name)") {
+                        model.setLanguages(mine: l.code, theirs: model.theirCode == l.code ? model.myCode : model.theirCode)
+                        model.misheardAt = nil
+                    }
+                }
+            } label: {
+                Text(verbatim: "Switch").font(.system(size: 10.5, weight: .semibold)).foregroundStyle(Palette.brand)
+            }
+            .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
+            Button { model.misheardAt = nil } label: {
+                Image(systemName: "xmark").font(.system(size: 8, weight: .bold)).foregroundStyle(Palette.tertiary)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 10).padding(.vertical, 6)
+        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Palette.warnPale.opacity(0.8)))
+        .task(id: model.misheardAt) {
+            try? await Task.sleep(for: .seconds(20))
+            model.misheardAt = nil
+        }
     }
 
     private func strip(icon: String, color: Color, fill: Color, text: String) -> some View {

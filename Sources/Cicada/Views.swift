@@ -872,14 +872,15 @@ struct MainWindowView: View {
             if !store.sessions.isEmpty {
                 sidebar
                     .frame(width: 232)
-                    .background(UnevenRoundedRectangle(topTrailingRadius: 14).fill(Self.listTint).ignoresSafeArea(edges: .bottom))
+                    .background(Color.white.opacity(0.3).ignoresSafeArea(edges: .bottom))
             }
             detail
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { detailWidth = $0 }
                 .overlay(alignment: .bottom) { SpeakerUndoToast(model: model, session: selection) }
         }
-        .background(Color.white.ignoresSafeArea())
+        // Snart's glass, like the bubble and settings.
+        .background(DropBackground(radius: 0).ignoresSafeArea())
         .background(Button("") { searchFocused = true }.keyboardShortcut("f").opacity(0))
         // Recordings and videos dropped anywhere on the window become records.
         .dropDestination(for: URL.self) { urls, _ in
@@ -1011,8 +1012,8 @@ struct MainWindowView: View {
                 if let status = importer.status(of: s) { Tag(rowTag(status), live: status == .running) }
             }
             .padding(.horizontal, 12).padding(.vertical, 9)
-            .background(RoundedRectangle(cornerRadius: 8).fill(selected ? Color.white : Color.clear)
-                .shadow(color: selected ? Palette.ink.opacity(0.06) : .clear, radius: 1.5, y: 1))
+            .background(Capsule().fill(selected ? Color.white.opacity(0.8) : Color.clear))
+            .overlay(Capsule().strokeBorder(selected ? Color.white : .clear, lineWidth: 0.8))
             .contentShape(Rectangle())
         }
         .help(live ? L("正在记录") : [RecordList.when(s), RecordList.length(s)].joined(separator: " · "))
@@ -1096,8 +1097,8 @@ struct MainWindowView: View {
                         .frame(maxWidth: 680, alignment: .leading)
                         .padding(.horizontal, 40).padding(.vertical, 10)
                         .frame(maxWidth: .infinity)
-                        .background(Color.white)
-                        .overlay(alignment: .top) { Rectangle().fill(Self.hairline).frame(height: 1) }
+                        .background(.ultraThinMaterial)
+                        .overlay(alignment: .top) { Rectangle().fill(Color.white.opacity(0.8)).frame(height: 0.8) }
                 }
             }
             .onChange(of: s.id) { _, _ in pinned = false }
@@ -1110,23 +1111,21 @@ struct MainWindowView: View {
     /// No meetings yet: the logo, one line and the one thing to do.
     private var welcome: some View {
         VStack(spacing: 0) {
-            BrandMark(size: 72).shadow(color: Palette.accent.opacity(0.22), radius: 14, y: 8)
+            BrandMark(size: 72).shadow(color: Palette.brand.opacity(0.25), radius: 14, y: 8)
             Text("还没有会议").font(.system(size: 26, weight: .bold)).padding(.top, 28)
             Text("打开会议或视频，开始听后，每一场都会存在这里。")
                 .font(.system(size: 15)).foregroundStyle(Palette.secondary).multilineTextAlignment(.center)
                 .padding(.top, 10)
             Button { model.setRunning(true) } label: {
                 HStack(spacing: 10) {
-                    Circle().fill(Palette.accent).frame(width: 9, height: 9)
+                    Image(systemName: "waveform").font(.system(size: 13, weight: .semibold))
                     Text("开始听").font(.system(size: 15, weight: .semibold))
                 }
                 .foregroundStyle(.white).padding(.horizontal, 22).frame(height: 44)
-                .background(Capsule().fill(Palette.ink))
+                .background(Capsule().fill(Palette.brand))
                 .contentShape(Capsule())
             }
             .buttonStyle(.plain).padding(.top, 32)
-            Button("先听一段示例") { model.ensureListening(); model.sample.play() }
-                .buttonStyle(.plain).font(.system(size: 13)).foregroundStyle(Palette.secondary).padding(.top, 16)
             Button("或导入录音、视频…") { model.chooseImportFiles() }
                 .buttonStyle(.plain).font(.system(size: 13)).foregroundStyle(Palette.ink).padding(.top, 8)
         }
@@ -1159,8 +1158,8 @@ struct MainWindowView: View {
             }
             .padding(.horizontal, 24).padding(.vertical, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Palette.accentWash)
-            .overlay(alignment: .top) { Rectangle().fill(Palette.accentPale).frame(height: 1) }
+            .background(Palette.brand.opacity(0.07))
+            .overlay(alignment: .top) { Rectangle().fill(Palette.brand.opacity(0.18)).frame(height: 0.8) }
         }
     }
 
