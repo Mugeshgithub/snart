@@ -977,7 +977,7 @@
 "导入转写和生成纪要都需要 Ling key" = "Both file transcription and notes require an AI key";
 "需要 Ling key；没有也能转出文字记录" = "Needs an AI key; the transcript works without one";
 "会议应用挂断后结束" = "End when the meeting app hangs up";
-"Zoom、腾讯会议、飞书、Teams 等" = "Zoom, Teams, Webex and others";
+"Zoom、腾讯会议、飞书、Teams 等" = "Zoom, Teams, WhatsApp, FaceTime and others";
 "没人说话时" = "When no one speaks";
 "按识别出的话算，背景音乐不算" = "Counts recognized words, not background music";
 "多久算没人说话" = "Silent for";

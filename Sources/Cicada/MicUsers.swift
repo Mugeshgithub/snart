@@ -32,6 +32,9 @@ enum MicUsers {
         "us.zoom.xos", "com.tencent.meeting", "com.microsoft.teams2", "com.microsoft.teams",
         "com.electron.lark", "com.bytedance.lark", "com.larksuite.larkApp", "com.alibaba.DingTalkMac",
         "com.tencent.WeWorkMac", "Cisco-Systems.Spark", "com.webex.meetingmanager",
+        // Calls people make in Snart's languages: hanging up in these ends the meeting too.
+        "net.whatsapp.WhatsApp", "com.apple.FaceTime", "com.tinyspeck.slackmacgap", "com.hnc.Discord",
+        "ru.keepcoder.Telegram", "org.whispersystems.signal-desktop", "com.skype.skype",
     ]
 
     /// One audio-reading process: its bundle id and the input devices it has open.
