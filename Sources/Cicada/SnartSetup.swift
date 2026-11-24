@@ -73,6 +73,12 @@ struct SetupView: View {
         .padding(24)
         .frame(width: 460, height: 520)
         .background(DropBackground(radius: 30))
+        .sheet(isPresented: $model.speakTestShown) {
+            SpeakTestView(model: model, tester: model.speakTester) {
+                if model.speakTester.busy { model.speakTester.cancel() }
+                model.speakTestShown = false
+            }
+        }
     }
 
     private var dots: some View {
@@ -230,6 +236,10 @@ struct SetupView: View {
             if let mic = model.virtualMic {
                 card {
                     row("checkmark.seal", "\(mic.name) is ready", "In WhatsApp, Zoom or Meet, use it as the microphone") { ok }
+                    Divider().opacity(0.5)
+                    row("play.circle", "Try a sentence", "Say one line and hear exactly what they will hear") {
+                        secondary("Try") { model.speakTestShown = true }
+                    }
                 }
             } else {
                 MicSetupCard(installer: installer, deviceName: nil)

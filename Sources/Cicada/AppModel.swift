@@ -2900,6 +2900,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
         }
         add(model.running ? "Stop listening" : "Start listening") { [weak self] in self?.model.setRunning(!(self?.model.running ?? true)) }
         menu.addItem(.separator())
+        add("Try a sentence…") { [weak self] in self?.model.openSettings(.voice); self?.model.speakTestShown = true }
         add("Settings…", ",") { [weak self] in self?.model.openSettings(.ai) }
         add("Setup…") { [weak self] in self?.model.onboardingStep = 1; self?.showOnboarding() }
         add("Past meetings") { [weak self] in self?.showMainWindow() }
