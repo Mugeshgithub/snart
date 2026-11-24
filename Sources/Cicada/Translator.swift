@@ -203,7 +203,9 @@ final class TranslationService {
             trace?.attempts.append(.init(provider: ling.provider.id.rawValue, seconds: 0, failure: "simulated"))
             return nil
         }
-        if kind == .speak, ling.usable, lingWorthTrying(), !googleOff, google.open() {
+        // Tamil isn't raced: Google turns spoken, English-mixed Tamil into stiff or wrong text, so the
+        // AI is waited for, with Google only if it fails.
+        if kind == .speak, source != "ta", target != "ta", ling.usable, lingWorthTrying(), !googleOff, google.open() {
             return await race(text, source: source, target: target, trace: trace)
         }
         if kind != .draft, ling.usable, lingWorthTrying() {
@@ -257,8 +259,6 @@ final class TranslationService {
     /// on a model that is thinking. Still never the untranslated text: a sentence neither answered
     /// goes to on-device translation, then nowhere.
     nonisolated static let aiWait = 0.8
-    /// Google turns colloquial, English-mixed Tamil into nonsense: for Tamil the AI is waited for longer.
-    nonisolated static func aiWait(source: String, target: String) -> Double { source == "ta" || target == "ta" ? 2.0 : aiWait }
 
     /// Tamil as people speak it: heard mixed with English, and said back the same way rather than
     /// in formal written Tamil, which sounds stiff read aloud in a call.
@@ -287,7 +287,7 @@ final class TranslationService {
         let early: String?? = await withTaskGroup(of: String??.self) { group in
             group.addTask { await ai.value }
             group.addTask {
-                try? await Task.sleep(for: .seconds(Self.aiWait(source: source, target: target)))
+                try? await Task.sleep(for: .seconds(Self.aiWait))
                 return .none
             }
             let first = await group.next() ?? .none
