@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// Cognivex Interpreter's one window: start and stop, what they said (French) with its English,
+/// Snart's one window: start and stop, what they said (French) with its English,
 /// what you said with its French, and the talk key. Floats over the meeting app without taking
 /// focus, stays out of screen sharing, remembers where it was put. Settings open from the gear.
 @MainActor
@@ -34,7 +34,7 @@ final class LiveWindowController: NSObject, NSWindowDelegate {
             // Others never see it when you share your screen.
             p.sharingType = .none
             p.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-            p.minSize = NSSize(width: 320, height: 260)
+            p.minSize = NSSize(width: 360, height: 260)
             p.backgroundColor = .white
             p.delegate = self
             p.contentView = FirstClickHostingView(rootView: LiveView(model: model, store: model.store, settings: model.settings))
@@ -76,7 +76,7 @@ struct LiveView: View {
             footer
         }
         .background(Color.white)
-        .frame(minWidth: 320, minHeight: 260)
+        .frame(minWidth: 360, minHeight: 260)
     }
 
     // MARK: Header
@@ -109,26 +109,37 @@ struct LiveView: View {
         .padding(.leading, 74).padding(.trailing, 12).frame(height: 40)
     }
 
-    private var mine: String { model.speaksFrench ? "FR" : "EN" }
-    private var theirs: String { model.speaksFrench ? "EN" : "FR" }
-    private var theirName: String { model.speaksFrench ? "English" : "French" }
+    private var mine: String { model.myCode.uppercased() }
+    private var theirs: String { model.theirCode.uppercased() }
+    private var myName: String { VoiceSettings.name(model.myCode) }
+    private var theirName: String { VoiceSettings.name(model.theirCode) }
 
-    /// Which language is yours, flipped in one click: "EN → FR" is you speaking English to French.
+    /// The pair in one chip: yours on the left, theirs on the right, each a menu; the arrows swap them.
     private var direction: some View {
-        Button { model.setSpeaksFrench(!model.speaksFrench) } label: {
-            HStack(spacing: 5) {
-                Text(verbatim: mine).font(.system(size: 11, weight: .semibold))
-                Image(systemName: "arrow.left.arrow.right").font(.system(size: 9, weight: .semibold))
-                Text(verbatim: theirs).font(.system(size: 11, weight: .semibold))
+        HStack(spacing: 2) {
+            languageMenu(mine, help: "You speak \(myName)") { model.setLanguages(mine: $0, theirs: model.theirCode) }
+            Button { model.swapLanguages() } label: {
+                Image(systemName: "arrow.left.arrow.right").font(.system(size: 9, weight: .semibold)).foregroundStyle(Palette.secondary)
+                    .frame(width: 18, height: 20).contentShape(Rectangle())
             }
-            .foregroundStyle(Palette.ink)
-            .padding(.horizontal, 9).frame(height: 22)
-            .background(Capsule().fill(Palette.raised))
-            .overlay(Capsule().stroke(Palette.line, lineWidth: 1))
-            .contentShape(Capsule())
+            .buttonStyle(.plain)
+            .help("Swap")
+            languageMenu(theirs, help: "They speak \(theirName)") { model.setLanguages(mine: model.myCode, theirs: $0) }
         }
-        .buttonStyle(.plain)
-        .help("You speak \(model.speaksFrench ? "French" : "English"), they hear \(theirName). Click to switch.")
+        .padding(.horizontal, 4).frame(height: 22)
+        .background(Capsule().fill(Palette.raised))
+        .overlay(Capsule().stroke(Palette.line, lineWidth: 1))
+    }
+
+    private func languageMenu(_ code: String, help: String, pick: @escaping (String) -> Void) -> some View {
+        Menu {
+            ForEach(sourceLanguages, id: \.code) { l in Button(l.name) { pick(l.code) } }
+        } label: {
+            Text(verbatim: code).font(.system(size: 11, weight: .semibold)).foregroundStyle(Palette.ink)
+                .padding(.horizontal, 4)
+        }
+        .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
+        .help(help)
     }
 
     // MARK: Body
@@ -136,8 +147,7 @@ struct LiveView: View {
     private var idle: some View {
         VStack(spacing: 14) {
             Spacer()
-            Text(verbatim: model.speaksFrench ? "They speak English, you read French.\nYou speak French, they hear English."
-                                              : "They speak French, you read English.\nYou speak English, they hear French.")
+            Text(verbatim: "They speak \(theirName), you read \(myName).\nYou speak \(myName), they hear \(theirName).")
                 .font(.system(size: 13)).foregroundStyle(Palette.secondary).multilineTextAlignment(.center)
             Button { model.setRunning(true) } label: {
                 Text(verbatim: "Start listening").font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)

@@ -33,7 +33,7 @@ struct GoogleTranslator {
         guard let url = comps.url else { throw TranslateFailure.badURL }
         var req = URLRequest(url: url)
         req.timeoutInterval = 8
-        req.setValue("Cognivex/1.0", forHTTPHeaderField: "User-Agent")
+        req.setValue("Snart/1.0", forHTTPHeaderField: "User-Agent")
         let (data, response) = try await URLSession.shared.data(for: req)
         guard let http = response as? HTTPURLResponse else { throw TranslateFailure.parse }
         guard http.statusCode == 200 else { throw TranslateFailure.badResponse(http.statusCode) }
@@ -417,6 +417,11 @@ final class TranslationService {
     /// call failed, so listening can tell a service that is down from a quiet meeting.
     func hear(wav: Data, seconds: Double, target: String, hint: String?,
               priority: LingClient.Priority = .translate) async throws -> CloudHeard? {
+        // A language the Mac can't hear (Tamil): ElevenLabs Scribe writes it down, the text is translated as the Mac's own is.
+        if let hint, sourceLanguages.first(where: { $0.code == hint })?.cloud == true, ElevenLabs.configured {
+            let text = try await ElevenLabs.transcribe(wav, language: hint)
+            return CloudHearing.transcript(text, reported: hint, hint: hint, target: target, seconds: seconds)
+        }
         // A custom service's speech model only transcribes: the text is translated as the Mac's own is.
         if ling.transcribes {
             // No language sent: a speech model takes it as an order, and an English line in a

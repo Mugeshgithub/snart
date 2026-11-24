@@ -2,7 +2,7 @@
 "连上 %@" = "Reach %@";
 "key 可以用" = "Key works";
 "纪要和翻译" = "Notes and translation";
-"知了没有本地网络权限，连不上 %@。" = "Cognivex isn't allowed on the local network, so it can't reach %@.";
+"知了没有本地网络权限，连不上 %@。" = "Snart isn't allowed on the local network, so it can't reach %@.";
 "这台 Mac 访问不到 %@。" = "This Mac can't reach %@.";
 "地址要用 https；这台 Mac 和局域网里的服务可以用 http。" = "The address must use https; services on this Mac or your local network can use http.";
 "%@ 说这个 key 无效，可能没复制全，或已删除。" = "%@ says this key is invalid. It may be incomplete or deleted.";
@@ -19,7 +19,7 @@
 "%@ 不认上面的 key，给它单独填一个。" = "%@ doesn't accept the key above. Give it its own.";
 "这个模型没按要求返回 JSON，写不了纪要。换一个通用模型。" = "This model didn't return JSON, so it can't write notes. Try a general-purpose model.";
 "这台 Mac 访问不到 %@，开会时先用本机识别。" = "This Mac can't reach %@; meetings use on-device recognition for now.";
-"知了没有本地网络权限，连不上 %@，开会时先用本机识别。" = "Cognivex isn't allowed on the local network, so it can't reach %@. Meetings use this Mac's recognition for now.";
+"知了没有本地网络权限，连不上 %@，开会时先用本机识别。" = "Snart isn't allowed on the local network, so it can't reach %@. Meetings use this Mac's recognition for now.";
 "%@ 没接受音频（HTTP %lld），开会时先用本机识别。" = "%@ didn't accept the audio (HTTP %lld); meetings use on-device recognition for now.";
 "开了代理也连不上：换一个节点，或检查代理软件是否放过 %@。" = "A proxy is on but it still can't connect. Try another server, or check that your proxy app routes %@.";
 "代理软件在运行（端口 %@），但没开系统代理。在代理软件里打开“系统代理”。" = "A proxy app is running (port %@), but the system proxy is off. Turn on “System Proxy” in the proxy app.";
@@ -37,7 +37,7 @@
 "去充值" = "Add credits";
 "换成推荐的 %@" = "Use recommended %@";
 "字幕照常；纪要和整句翻译先停下" = "Subtitles go on; notes and full-sentence translation pause";
-"知了没有本地网络权限" = "Cognivex isn't allowed on the local network";
+"知了没有本地网络权限" = "Snart isn't allowed on the local network";
 "连不上 %@" = "Can't reach %@";
 "打开设置" = "Open Settings";
 "用完后纪要会停下" = "Notes stop when it runs out";
@@ -88,7 +88,7 @@
 "在“词表”里打开" = "Turn on in Word list";
 "你自己的声音" = "Your own voice";
 "本机" = "On-device";
-"对方听到法语，用你的声音" = "They hear French in your voice";
+"对方听到法语，用你的声音" = "They hear the translation in your voice";
 "在“声音”里填好 ElevenLabs" = "Set up ElevenLabs under Voice";
 "语音识别" = "Speech recognition";
 "识别和翻译一步完成" = "Transcribed and translated in one step";
@@ -123,7 +123,7 @@
 "移除 key" = "Remove key";
 "key 只存在这台 Mac 上（只有你的账户能读），只发给 %@" = "The key is stored only on this Mac (readable only by your account) and sent only to %@";
 "只存在这台 Mac 上（只有你的账户能读），只发给 %@（%@）" = "Stored only on this Mac (readable only by your account) and sent only to %@ (%@)";
-"局域网里的服务器：macOS 会问一次能否访问本地网络，点“允许”。" = "A server on your local network: macOS asks once whether Cognivex may use the local network. Click Allow.";
+"局域网里的服务器：macOS 会问一次能否访问本地网络，点“允许”。" = "A server on your local network: macOS asks once whether Snart may use the local network. Click Allow.";
 "%@ 和 %@" = "%@ and %@";
 "你填的地址" = "the URL you entered";
 "填上地址和模型" = "Add an address and a model";
@@ -408,7 +408,7 @@
 
 /* FolderExport */
 "纪要没存到文件夹" = "Notes weren't saved to the folder";
-"知了没有权限写入 %@。点按去设置" = "Cognivex isn't allowed to write to %@. Click to open Settings";
+"知了没有权限写入 %@。点按去设置" = "Snart isn't allowed to write to %@. Click to open Settings";
 
 /* FolderExportViews */
 "上次存于 %@ · %@" = "Last saved %@ · %@";
@@ -417,7 +417,7 @@
 "位置" = "Location";
 "以前的会议" = "Earlier meetings";
 "还有 %lld 场没存" = "%lld not saved yet";
-"正在确认能写入 %@…" = "Checking Cognivex can write to %@…";
+"正在确认能写入 %@…" = "Checking Snart can write to %@…";
 "Obsidian 库" = "Obsidian vault";
 "打开" = "Open";
 "更改…" = "Change…";
@@ -429,11 +429,11 @@
 "接上或换个文件夹后自动补存" = "Saves once it's back, or pick another folder";
 "没存上" = "Not saved";
 "%lld 场会议没存上，允许后自动补存" = "%lld meetings not saved; they save once allowed";
-"在系统设置里允许知了，或换个文件夹" = "Allow Cognivex in System Settings, or pick another folder";
+"在系统设置里允许知了，或换个文件夹" = "Allow Snart in System Settings, or pick another folder";
 "Obsidian 库「%@」" = "Obsidian vault “%@”";
-"在库里新建 Cognivex 文件夹" = "A new Cognivex folder inside it";
+"在库里新建 Cognivex 文件夹" = "A new Snart folder inside it";
 "存到哪里" = "Save where";
-"macOS 可能会问一次能不能访问这个位置" = "macOS may ask once whether Cognivex can use this location";
+"macOS 可能会问一次能不能访问这个位置" = "macOS may ask once whether Snart can use this location";
 "存到这里" = "Save here";
 "会后把纪要和文字记录存成 Markdown 到这里" = "After each meeting, notes and transcript are saved here as Markdown";
 "已存到 %@ ·" = "Saved to %@ ·";
@@ -506,7 +506,7 @@
 "等你允许使用麦克风" = "Waiting for microphone access";
 "正在听" = "Listening";
 "此 Mac 不支持本机语音识别" = "This Mac doesn't support on-device speech recognition";
-"请在系统设置里允许“系统音频录制”，再重新打开知了" = "Allow System Audio Recording in System Settings, then reopen Cognivex";
+"请在系统设置里允许“系统音频录制”，再重新打开知了" = "Allow System Audio Recording in System Settings, then reopen Snart";
 "无法读取系统音频，请在系统设置里允许“系统音频录制”" = "Can't read system audio. Allow “System Audio Recording” in System Settings";
 "没能下载 %@ 语音模型" = "Couldn't download the %@ speech model";
 "已暂停" = "Paused";
@@ -520,7 +520,7 @@
 
 /* ListenPill */
 "开始听" = "Start listening";
-"知了" = "Cognivex";
+"知了" = "Snart";
 "会议已自动结束" = "Meeting ended by itself";
 "显示字幕条" = "Show Subtitle Bar";
 "显示实时纪要" = "Show Live Notes";
@@ -726,12 +726,12 @@
 "完成" = "Done";
 "开始使用" = "Get Started";
 "继续" = "Continue";
-"让知了听到电脑里的声音" = "Let Cognivex hear your Mac";
-"字幕和纪要都从这里来。去系统设置打开，回来会自动识别。" = "Subtitles and notes come from it. Turn it on in System Settings; Cognivex notices when you're back.";
+"让知了听到电脑里的声音" = "Let Snart hear your Mac";
+"字幕和纪要都从这里来。去系统设置打开，回来会自动识别。" = "Subtitles and notes come from it. Turn it on in System Settings; Snart notices when you're back.";
 "会议录音和文字记录只存在这台 Mac 上" = "Meeting recordings and transcripts stay on this Mac";
 "声音只在本机识别" = "Audio is recognized only on this Mac";
 "听电脑里的声音" = "Hear the Mac's audio";
-"在系统设置里打开后，要重新打开知了" = "After turning it on in System Settings, reopen Cognivex";
+"在系统设置里打开后，要重新打开知了" = "After turning it on in System Settings, reopen Snart";
 "只听声音，不录屏幕画面" = "Sound only, never the screen";
 "识别语音" = "Recognize speech";
 "打开“听写”，允许“语音识别”" = "Turn on Dictation and allow Speech Recognition";
@@ -758,7 +758,7 @@
 "右侧 option" = "Right option";
 "最后一步：在会议软件中，将麦克风选为 " = "Last step: in your meeting app, set the microphone to ";
 "等你选好…" = "Waiting for you…";
-"好了，知了在菜单栏" = "All set. Cognivex lives in the menu bar";
+"好了，知了在菜单栏" = "All set. Snart lives in the menu bar";
 "接下来会打开会议记录窗口，之后从右上角的图标找到它。" = "Your meetings window opens next; after that, find it by the icon at the top right.";
 "开会时点它" = "Click it in a meeting";
 "开始听，出字幕和纪要" = "Starts listening: subtitles and notes";
@@ -830,7 +830,7 @@
 
 /* Recognition */
 "请在系统设置 › 键盘里打开“听写”" = "Turn on Dictation in System Settings › Keyboard";
-"请在系统设置里允许知了使用“语音识别”" = "Allow Cognivex to use Speech Recognition in System Settings";
+"请在系统设置里允许知了使用“语音识别”" = "Allow Snart to use Speech Recognition in System Settings";
 "本机不支持%@识别" = "This Mac can't recognize %@";
 "请在系统设置 › 键盘 › 听写里添加%@，下载好后可用" = "Add %@ to Dictation in System Settings › Keyboard; it works once downloaded";
 
@@ -1016,7 +1016,7 @@
 "分享得太频繁了，请稍后再试。" = "Too many shares just now. Try again later.";
 "敏感内容检查暂时不可用，没有检查就不会分享。请稍后再试。" = "The check for sensitive content is unavailable right now, and nothing is shared unchecked. Try again later.";
 "分享功能暂时关闭了。" = "Sharing is turned off for now.";
-"请先更新知了。" = "Update Cognivex first.";
+"请先更新知了。" = "Update Snart first.";
 "这场会议太长，可以只分享纪要。" = "This meeting is too long. You can share just the notes.";
 "这场会议没有可分享的内容。" = "This meeting has nothing to share.";
 "连不上 cicada.indaloop.app，请检查网络。" = "Can't reach cicada.indaloop.app. Check your connection.";
@@ -1253,8 +1253,8 @@
 "更新包无效" = "The update package is invalid";
 
 /* Updates */
-"知了有新版本 %@" = "Cognivex %@ is available";
-"点按安装，完成后自动重新打开" = "Click to install. Cognivex reopens when it's done.";
+"知了有新版本 %@" = "Snart %@ is available";
+"点按安装，完成后自动重新打开" = "Click to install. Snart reopens when it's done.";
 "刚刚查过" = "checked now";
 "%lld 分钟前查过" = "checked %lld min ago";
 "%lld 小时前查过" = "checked %lld h ago";

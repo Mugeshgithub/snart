@@ -20,12 +20,11 @@ struct VoiceSettings: View {
                 SettingsCard { MicSetupCard(installer: installer, deviceName: nil) }
             }
             SettingsCard {
-                SettingsRow(title: "I speak", detail: model.speaksFrench ? "You read French; they hear you in English"
-                                                                         : "You read English; they hear you in French") {
-                    Segments(options: [("en", "English"), ("fr", "French")], value: model.speaksFrench ? "fr" : "en") {
-                        model.setSpeaksFrench($0 == "fr")
-                    }
-                    .fixedSize()
+                SettingsRow(title: "I speak", detail: "You read this, and speak it") {
+                    PillMenu(value: Self.name(model.myCode), options: Self.languages) { model.setLanguages(mine: $0, theirs: model.theirCode) }
+                }
+                SettingsRow(title: "They speak", detail: tamilNote ?? "They hear you in this, in your voice") {
+                    PillMenu(value: Self.name(model.theirCode), options: Self.languages) { model.setLanguages(mine: model.myCode, theirs: $0) }
                 }
                 SettingsRow(title: "Hold to talk") { ShortcutField(model: model, role: .talk) }
                 SettingsRow(title: "Hands-free", detail: "No key: it speaks for you after a short pause. Best with headphones.",
@@ -40,6 +39,15 @@ struct VoiceSettings: View {
         }
     }
 
+    static let languages = sourceLanguages.map { ($0.code, $0.name) }
+    static func name(_ code: String) -> String { sourceLanguages.first { $0.code == code }?.name ?? code }
+
+    /// Tamil can't be heard on the Mac: ElevenLabs does it, so it needs the key below.
+    private var tamilNote: String? {
+        guard [model.myCode, model.theirCode].contains("ta") else { return nil }
+        return ElevenLabs.configured && version >= 0 ? "Tamil is heard by ElevenLabs" : "Tamil needs your ElevenLabs key below"
+    }
+
     private var eleven: some View {
         let ready = ElevenLabs.configured && version >= 0
         let changed = !key.isEmpty || voice.trimmingCharacters(in: .whitespaces) != (ElevenLabs.voice ?? "")
@@ -51,7 +59,7 @@ struct VoiceSettings: View {
                 Spacer()
                 if ready {
                     SoftButton(model.previewing == ElevenLabs.id ? L("播放中…") : L("试听")) {
-                        model.previewVoice(ElevenLabs.id, language: model.speaksFrench ? "en" : "fr")
+                        model.previewVoice(ElevenLabs.id, language: model.theirCode)
                     }
                     .disabled(model.previewing != nil)
                 }

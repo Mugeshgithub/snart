@@ -393,11 +393,12 @@ final class SpeakEngine {
     /// audio format it wants. Each press then gets its own short-lived analyzer.
     func prepare() async {
         let lang = settings.speakFromLang
-        guard analyzerLocale != lang.locale || analyzerFormat == nil else { return }
+        let locale = lang.recognizerLocale
+        guard analyzerLocale != locale || analyzerFormat == nil else { return }
         do {
-            try await Recognition.install(lang.locale) { _ in self.onStatus?(L("正在下载 \(lang.name) 语音模型…")) }
-            analyzerFormat = await Recognition.format(lang.locale, drafts: true)
-            analyzerLocale = lang.locale
+            try await Recognition.install(locale) { _ in self.onStatus?(L("正在下载 \(lang.name) 语音模型…")) }
+            analyzerFormat = await Recognition.format(locale, drafts: true)
+            analyzerLocale = locale
             debugLog("speak transcriber ready locale=\(lang.locale)")
         } catch {
             debugLog("speak transcriber failed: \(error)")
@@ -434,7 +435,7 @@ final class SpeakEngine {
     private func beginUtterance() -> RecognitionStream? {
         guard let format = analyzerFormat else { return nil }
         let lang = settings.speakFromLang
-        let stream = Recognition.startNow(lang.locale, drafts: true, format: format)
+        let stream = Recognition.startNow(lang.recognizerLocale, drafts: true, format: format)
         finals = []
         volatile = ""
         micQueue.sync { pressSamples = []; pressConverter = PCMConverter() }
@@ -458,7 +459,8 @@ final class SpeakEngine {
         } else {
             volatile = text
         }
-        if phase == .listening { onLive?(.listening, currentText, "") }
+        // A language the service hears: the stand-in model's words are noise, not what you said.
+        if phase == .listening { onLive?(.listening, settings.speakFromLang.cloud ? "" : currentText, "") }
     }
 
     private var currentText: String {

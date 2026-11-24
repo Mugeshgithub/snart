@@ -100,10 +100,10 @@ struct FolderChoice: View {
         self.current = current
         self.done = done
         var options: [(String, String?, URL?)] = FolderExportFormat.obsidianVaults.prefix(3).map {
-            (L("Obsidian 库「\($0.lastPathComponent)」"), L("在库里新建 Cognivex 文件夹"), $0.appendingPathComponent("Cognivex", isDirectory: true))
+            (L("Obsidian 库「\($0.lastPathComponent)」"), L("在库里新建 Cognivex 文件夹"), $0.appendingPathComponent("Snart", isDirectory: true))
         }
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        options.append((FileManager.default.displayName(atPath: documents.path) + " › Cognivex", nil, documents.appendingPathComponent("Cognivex", isDirectory: true)))
+        options.append((FileManager.default.displayName(atPath: documents.path) + " › Snart", nil, documents.appendingPathComponent("Snart", isDirectory: true)))
         options.append((L("其他文件夹…"), nil, nil))
         self.options = options
     }

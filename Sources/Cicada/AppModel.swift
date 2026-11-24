@@ -383,7 +383,14 @@ final class AppModel: ObservableObject {
             await self?.listen.translate(text, source: from, target: to, kind: .speak, trace: trace)
         }
         speak.interpret = { [weak self] wav, from, to, trace in
-            await self?.translator.interpret(wav: wav, source: from, target: to, trace: trace)
+            guard let self else { return nil }
+            // You speak Tamil: ElevenLabs writes down the press, then it is translated like any sentence.
+            if sourceLanguages.first(where: { $0.code == from })?.cloud == true {
+                guard ElevenLabs.configured, let text = try? await ElevenLabs.transcribe(wav, language: from), !text.isEmpty,
+                      let out = await self.listen.translate(text, source: from, target: to, kind: .speak, trace: trace) else { return nil }
+                return (text, out)
+            }
+            return await self.translator.interpret(wav: wav, source: from, target: to, trace: trace)
         }
         speak.roomLanguage = { [weak self] in self?.listen.activeLang?.code }
         speak.inputDevice = { [weak self] in self?.systemMic.recordingDevice }
@@ -1103,19 +1110,29 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// The one language switch: which of English and French is yours. Theirs is the other one;
-    /// you read yours, and what you say goes out in theirs.
-    var speaksFrench: Bool { settings.speakFrom.hasPrefix("fr") }
-
-    func setSpeaksFrench(_ french: Bool) {
-        guard french != speaksFrench else { return }
-        settings.speakFrom = french ? "fr-FR" : "en-US"
-        settings.speakTo = french ? "en" : "fr"
-        sourceSelection = french ? "en-US" : "fr-FR"
-        targetSelection = french ? "fr" : "en"
-        speakFromChanged()
-        debugLog("direction: you speak \(french ? "French" : "English")")
+    /// The language pair: yours (you read it, you speak it) and theirs (you hear it, they hear
+    /// you in it). Any two of Snart's five.
+    var myCode: String { settings.speakFromLang.code }
+    var theirCode: String {
+        if case .fixed(let l) = settings.sourceMode, l.code != myCode { return l.code }
+        return myCode == "en" ? "fr" : "en"
     }
+
+    func setLanguages(mine: String, theirs: String) {
+        guard let m = sourceLanguages.first(where: { $0.code == mine }),
+              let t = sourceLanguages.first(where: { $0.code == theirs }) else { return }
+        // Picking yours as theirs (or the other way) swaps them rather than pairing a language with itself.
+        let (me, them) = m == t ? (m, sourceLanguages.first { $0.code == myCode } ?? sourceLanguages[0]) : (m, t)
+        guard me != them else { return }
+        settings.speakFrom = me.locale
+        settings.speakTo = them.code
+        sourceSelection = them.locale
+        targetSelection = me.code
+        speakFromChanged()
+        debugLog("languages: you \(me.code), them \(them.code)")
+    }
+
+    func swapLanguages() { setLanguages(mine: theirCode, theirs: myCode) }
 
     func enableSpeaking(_ on: Bool) {
         settings.speakEnabled = on
@@ -1230,7 +1247,10 @@ final class AppModel: ObservableObject {
     /// user's own voice without Ling) falls back to the default, and comes back with that service.
     func voiceID(for language: String) -> String? {
         let fallback = VoiceCatalog.defaultID(for: language, hasKey: ling.speaks)
-        guard let id = settings.speakVoices[VoiceCatalog.key(for: language)] else { return fallback }
+        // Your ElevenLabs voice speaks every language unless one was given another voice.
+        let picked = settings.speakVoices[VoiceCatalog.key(for: language)]
+        if ElevenLabs.configured, picked == nil || picked == ElevenLabs.id { return ElevenLabs.id }
+        guard let id = picked else { return fallback }
         if id.hasPrefix("system:") { return id }
         if id == ElevenLabs.id { return ElevenLabs.configured ? id : fallback }
         if id == "clone" { return VoiceReference.exists && ling.clones ? id : fallback }
@@ -2538,7 +2558,10 @@ final class AppModel: ObservableObject {
         case "speakOut": speak.debugOutputURL = arg.isEmpty ? nil : URL(fileURLWithPath: arg)
         case "speakFile": speak.speakFile(URL(fileURLWithPath: arg))
         // direction:fr|en: which of English and French you speak (the live window's EN ⇄ FR chip).
-        case "direction": setSpeaksFrench(arg == "fr")
+        // languages:<mine>,<theirs>: the pair, as the live window's chip sets it.
+        case "languages":
+            let p = arg.split(separator: ",").map(String.init)
+            if p.count == 2 { setLanguages(mine: p[0], theirs: p[1]) }
         // talkDown / talkUp: the talk key held and let go, with the real microphone (audio tests).
         // handsFree:on|off: 不用按键, as the setting.
         case "handsFree": settings.speakHandsFree = arg != "off"

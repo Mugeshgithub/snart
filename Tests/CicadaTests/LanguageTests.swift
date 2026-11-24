@@ -29,9 +29,13 @@ import Testing
         #expect(LanguageDetector.score(conf: 0.9, chars: 3, text: "abc", lang: english) == 0.45)
     }
 
-    @Test func onlyEnglishAndFrenchAreOffered() {
-        #expect(sourceLanguages.map(\.code) == ["en", "fr"])
-        #expect(targetLanguages.map(\.code) == ["en", "fr"])
+    @Test func snartsFiveLanguagesWithTamilHeardByTheService() {
+        #expect(sourceLanguages.map(\.code) == ["en", "fr", "it", "de", "ta"])
+        #expect(targetLanguages.map(\.code) == ["en", "fr", "it", "de", "ta"])
+        #expect(sourceLanguages.filter(\.cloud).map(\.code) == ["ta"])
+        // Tamil presses still run through a Mac model, whose words are dropped.
+        #expect(sourceLanguages.first { $0.code == "ta" }?.recognizerLocale == "en-US")
+        #expect(sourceLanguages.first { $0.code == "de" }?.recognizerLocale == "de-DE")
     }
 }
 

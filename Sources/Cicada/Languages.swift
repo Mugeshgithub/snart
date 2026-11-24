@@ -11,16 +11,30 @@ struct Lang: Equatable {
     let code: String
 }
 
-// Cognivex Interpreter hears and speaks English and French only: every language menu offers these two.
+// Snart's five languages. Tamil has no speech model on the Mac: ElevenLabs hears it (`Lang.cloud`).
 let sourceLanguages: [Lang] = [
     .init(name: "English", locale: "en-US", code: "en"),
     .init(name: "French", locale: "fr-FR", code: "fr"),
+    .init(name: "Italian", locale: "it-IT", code: "it"),
+    .init(name: "German", locale: "de-DE", code: "de"),
+    .init(name: "Tamil", locale: "ta-IN", code: "ta"),
 ]
 
 let targetLanguages: [Lang] = [
     .init(name: "English", locale: "en", code: "en"),
     .init(name: "French", locale: "fr", code: "fr"),
+    .init(name: "Italian", locale: "it", code: "it"),
+    .init(name: "German", locale: "de", code: "de"),
+    .init(name: "Tamil", locale: "ta", code: "ta"),
 ]
+
+extension Lang {
+    /// Heard by a service (ElevenLabs Scribe), not on the Mac.
+    var cloud: Bool { code == "ta" }
+    /// The Mac model a press still runs through when the language is heard by the service: its words
+    /// are thrown away, it only keeps the press flowing (`SpeakEngine`).
+    var recognizerLocale: String { cloud ? "en-US" : locale }
+}
 
 /// Maps a system language identifier ("zh-Hans-CA", "en-CA", "zh-TW") to a translation code.
 func translationCode(forSystemLanguage id: String) -> String {
@@ -38,9 +52,17 @@ func translationCode(forSystemLanguage id: String) -> String {
 /// app speaks Chinese), otherwise the first system language. Subtitles, notes and speak-back
 /// all start from this one answer, so they never disagree.
 func myLanguage(systemLanguages prefs: [String]) -> String {
-    // Cognivex Interpreter: yours is the language you speak (English unless you switched to French),
-    // whatever the Mac lists.
-    UserDefaults.standard.string(forKey: "speakFrom")?.hasPrefix("fr") == true ? "fr" : "en"
+    // Snart: yours is the language you speak, whatever the Mac lists.
+    let locale = UserDefaults.standard.string(forKey: "speakFrom")
+    return sourceLanguages.first { $0.locale == locale }?.code ?? "en"
+}
+
+/// The language the other side speaks (the fixed source), or the one beside yours when unset.
+func theirLanguage() -> String {
+    let locale = UserDefaults.standard.string(forKey: "sourceMode")
+    let mine = myLanguage(systemLanguages: [])
+    if let code = sourceLanguages.first(where: { $0.locale == locale })?.code, code != mine { return code }
+    return mine == "en" ? "fr" : "en"
 }
 
 /// What "follow system" translates into: my language, unless that is what they speak; then the
@@ -48,7 +70,7 @@ func myLanguage(systemLanguages prefs: [String]) -> String {
 func followSystemTarget(source: String?, systemLanguages prefs: [String]) -> String {
     // English and French only: shown in yours, unless they speak it too; then in the other one.
     let mine = myLanguage(systemLanguages: prefs)
-    return source == mine ? (mine == "en" ? "fr" : "en") : mine
+    return source == mine ? theirLanguage() : mine
 }
 
 /// The languages "auto" most likely hears, most likely first: the last one detected, the Mac's

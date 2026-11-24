@@ -14,7 +14,7 @@ enum DevBuild {
     static var isDev: Bool { label != nil }
 
     /// Folder name under ~/Library/Application Support.
-    static var supportFolder: String { isDev ? "Cognivex Interpreter Dev" : "Cognivex Interpreter" }
+    static var supportFolder: String { isDev ? "Snart Dev" : "Snart" }
 
     /// `CICADA_DEBUG_CHANNEL=x` (set with `open --env`, and for `tools/lsctl`) gives one running copy
     /// its own remote control and log, so two dev builds can be tested side by side.
@@ -22,7 +22,7 @@ enum DevBuild {
     static var debugChannel: String { "eu.cognivexai.interpreter.debug" + (channel.map { "." + $0 } ?? "") }
 
     static var logPath: String {
-        let base = isDev ? "/tmp/cognivex-interpreter-dev-debug" : "/tmp/cognivex-interpreter-debug"
+        let base = isDev ? "/tmp/snart-dev-debug" : "/tmp/snart-debug"
         return base + (channel.map { "-" + $0 } ?? "") + ".log"
     }
 }

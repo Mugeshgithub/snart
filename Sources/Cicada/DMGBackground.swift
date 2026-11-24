@@ -35,7 +35,7 @@ enum DMGBackground {
         ctx.setFillColor(CGColor(srgbRed: 0.965, green: 0.969, blue: 0.976, alpha: 1)) // #F6F7F9
         ctx.fill(CGRect(origin: .zero, size: size))
 
-        text("把 Cognivex Interpreter 拖进应用程序", size: 22, weight: .semibold, color: ink, centerX: size.width / 2, top: 28)
+        text("把 Snart 拖进应用程序", size: 22, weight: .semibold, color: ink, centerX: size.width / 2, top: 28)
         text("然后在应用程序或启动台里打开它", size: 13, weight: .regular, color: secondary, centerX: size.width / 2, top: 62)
 
         // Dotted arrow from the app to Applications.

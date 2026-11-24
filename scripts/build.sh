@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Builds "build/Cognivex Interpreter.app" (Apple silicon or Intel via ARCH=arm64|x86_64, default: host arch).
-# Without RELEASE=1 it is a dev build: "Cognivex Interpreter Dev", bundle id eu.cognivexai.interpreter.dev (its own
+# Builds "build/Snart.app" (Apple silicon or Intel via ARCH=arm64|x86_64, default: host arch).
+# Without RELEASE=1 it is a dev build: "Snart Dev", bundle id eu.cognivexai.interpreter.dev (its own
 # settings, permissions and meeting records), stamped with the branch and commit, which show in the
 # menu bar and panel; its icon carries a "DEV" band. RELEASE=1 builds the real eu.cognivexai.interpreter.
 set -euo pipefail
@@ -12,12 +12,12 @@ swift build -c release --product CicadaIcon
 BIN=$(swift build -c release --arch "$ARCH" --show-bin-path)
 HOST_BIN=$(swift build -c release --show-bin-path)
 
-APP="build/Cognivex Interpreter.app"
+APP="build/Snart.app"
 ICONSET=build/AppIcon.iconset
-rm -rf "$APP" "$ICONSET" build/LiveSubs.app build/Cicada.app
+rm -rf "$APP" "$ICONSET" build/LiveSubs.app build/Cicada.app "build/Cognivex Interpreter.app"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
-cp "$BIN/Cicada" "$APP/Contents/MacOS/CognivexInterpreter"
+cp "$BIN/Cicada" "$APP/Contents/MacOS/Snart"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 cp Resources/sample/sample.m4a "$APP/Contents/Resources/"
 # The experimental voiceprint model; the app compiles it on first use (no coremlcompiler in the CLT).
@@ -32,7 +32,7 @@ if [[ "${RELEASE:-}" != 1 ]]; then
   STAMP="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo local) @ $(git rev-parse --short HEAD 2>/dev/null || echo none)"
   [[ -n "$(git status --porcelain --untracked-files=no 2>/dev/null)" ]] && STAMP+="+"
   /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier eu.cognivexai.interpreter.dev" \
-    -c "Set :CFBundleName Cognivex Dev" -c "Set :CFBundleDisplayName Cognivex Interpreter Dev" \
+    -c "Set :CFBundleName Snart Dev" -c "Set :CFBundleDisplayName Snart Dev" \
     -c "Add :LiveSubsDev string $STAMP" "$PLIST"
   # Only the two name lines change: the usage descriptions in the same files stay.
   sed -i '' -E 's/^(CFBundle(Display)?Name = ")([^"]*)";/\1\3 Dev";/' \

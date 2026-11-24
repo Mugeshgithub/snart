@@ -147,7 +147,7 @@ final class SystemAudioTap {
         // Exclude our own process so the app's spoken translations never
         // come back in as subtitles.
         let desc = CATapDescription(stereoGlobalTapButExcludeProcesses: Self.ownProcessObject().map { [$0] } ?? [])
-        desc.name = "Cognivex"
+        desc.name = "Snart"
         desc.isPrivate = true
 
         var tap = AudioObjectID(kAudioObjectUnknown)
@@ -159,7 +159,7 @@ final class SystemAudioTap {
 
         let aggregateUID = "eu.cognivexai.interpreter.\(UUID().uuidString)"
         let aggregate: [String: Any] = [
-            kAudioAggregateDeviceNameKey: "Cognivex Tap",
+            kAudioAggregateDeviceNameKey: "Snart Tap",
             kAudioAggregateDeviceUIDKey: aggregateUID,
             kAudioAggregateDeviceMainSubDeviceKey: outputUID,
             kAudioAggregateDeviceIsPrivateKey: true,

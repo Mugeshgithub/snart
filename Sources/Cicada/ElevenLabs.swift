@@ -34,6 +34,40 @@ enum ElevenLabs {
         VoiceOption(id: id, name: L("我的声音"), tags: ["ElevenLabs"], kind: .cloud("eleven"))
     }
 
+    /// Scribe hears what the Mac can't (Tamil): the text of a 16 kHz WAV in `language` (ISO 639-1).
+    static func transcribe(_ wav: Data, language: String) async throws -> String {
+        guard let key, let url = URL(string: "https://api.elevenlabs.io/v1/speech-to-text") else { throw LingClient.Failure.noKey }
+        let boundary = "snart-" + UUID().uuidString
+        var body = Data()
+        func field(_ name: String, _ value: String) {
+            body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"\(name)\"\r\n\r\n\(value)\r\n".utf8))
+        }
+        field("model_id", "scribe_v1")
+        field("language_code", language)
+        field("tag_audio_events", "false")
+        body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"file\"; filename=\"speech.wav\"\r\nContent-Type: audio/wav\r\n\r\n".utf8))
+        body.append(wav)
+        body.append(Data("\r\n--\(boundary)--\r\n".utf8))
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.timeoutInterval = 15
+        req.setValue(key, forHTTPHeaderField: "xi-api-key")
+        req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        req.httpBody = body
+        let started = Date()
+        let (data, response) = try await URLSession.shared.data(for: req)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard status == 200 else {
+            debugLog("elevenlabs stt: HTTP \(status) \(String(decoding: data.prefix(300), as: UTF8.self))")
+            throw status == 401 ? LingClient.Failure.invalidKey : status == 429 ? LingClient.Failure.rateLimited : LingClient.Failure.http(status)
+        }
+        guard let root = try JSONSerialization.jsonObject(with: data) as? [String: Any], let text = root["text"] as? String else {
+            throw LingClient.Failure.parse
+        }
+        debugLog(String(format: "elevenlabs stt: %.1f s of audio heard in %.2f s", Double(wav.count - 44) / 32_000, Date().timeIntervalSince(started)))
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     /// Opens the connection while you are still talking, so the voice's first chunk doesn't wait on a handshake.
     static func warm() {
         guard configured, let url = URL(string: "https://api.elevenlabs.io/v1/models") else { return }

@@ -1,6 +1,6 @@
 import Foundation
 
-/// Cognivex Interpreter grew out of a Cicada build installed on the same Mac: on its first launch it
+/// Snart (first Cognivex Interpreter) grew out of a Cicada build installed on the same Mac: on its first launch it
 /// takes over that build's settings and its folder (AI keys, meeting records, voices), so nothing
 /// has to be set up again. Copies, never moves: the old app keeps working if it is still there.
 enum Migration {
@@ -10,7 +10,7 @@ enum Migration {
 
     static func run() {
         let defaults = UserDefaults.standard
-        guard !DevBuild.isDev, !defaults.bool(forKey: doneKey) else { return }
+        guard !DevBuild.isDev, !defaults.bool(forKey: doneKey) else { moveFolder(); return }
         defer { defaults.set(true, forKey: doneKey) }
         if let old = defaults.persistentDomain(forName: oldDomain) {
             // Where the settings window was, and update bookkeeping, belong to the old app.
@@ -18,15 +18,23 @@ enum Migration {
                 defaults.set(value, forKey: key)
             }
         }
+        moveFolder()
+    }
+
+    /// The folder this build keeps keys, meetings and voices in, from the newest earlier name
+    /// (Cognivex Interpreter, then Cicada's LiveSubs). Runs every launch until the folder exists.
+    private static func moveFolder() {
         let fm = FileManager.default
         let base = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        let from = base.appendingPathComponent(oldFolder), to = base.appendingPathComponent(DevBuild.supportFolder)
-        guard fm.fileExists(atPath: from.path), !fm.fileExists(atPath: to.path) else { return }
+        let to = base.appendingPathComponent(DevBuild.supportFolder)
+        guard !DevBuild.isDev, !fm.fileExists(atPath: to.path),
+              let from = ["Cognivex Interpreter", oldFolder].map({ base.appendingPathComponent($0) })
+                .first(where: { fm.fileExists(atPath: $0.path) }) else { return }
         do {
             try fm.copyItem(at: from, to: to)
             // Shares lived on the old project's server; their tokens mean nothing here.
             try? fm.removeItem(at: to.appendingPathComponent("Shares"))
-            debugLog("migration: settings and \(oldFolder) copied from Cicada")
+            debugLog("migration: \(from.lastPathComponent) copied to \(DevBuild.supportFolder)")
         } catch {
             debugLog("migration: copy failed: \(error)")
         }

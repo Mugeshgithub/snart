@@ -21,9 +21,9 @@
 		</dict>
 	</array>
 	<key>CFBundleDisplayName</key>
-	<string>Cognivex Interpreter</string>
+	<string>Snart</string>
 	<key>CFBundleExecutable</key>
-	<string>CognivexInterpreter</string>
+	<string>Snart</string>
 	<key>CFBundleIconFile</key>
 	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
@@ -35,7 +35,7 @@
 		<string>en</string>
 	</array>
 	<key>CFBundleName</key>
-	<string>Cognivex</string>
+	<string>Snart</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -51,7 +51,7 @@
 	<key>LSUIElement</key>
 	<false/>
 	<key>NSAudioCaptureUsageDescription</key>
-	<string>Cognivex Interpreter reads the sound your Mac is playing to make live subtitles.</string>
+	<string>Snart reads the sound your Mac is playing to make live subtitles.</string>
 	<key>NSDocumentsFolderUsageDescription</key>
 	<string>To save each meeting's notes and transcript into the folder you chose.</string>
 	<key>NSDesktopFolderUsageDescription</key>
@@ -65,12 +65,12 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2026 CognivexAI. Based on Cognivex Interpreter (Apache-2.0).</string>
+	<string>Snart by CognivexAI © 2026. Based on Cicada (Apache-2.0).</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Only to reach the AI server you set up on your local network. Cognivex Interpreter doesn't look for or connect to other devices.</string>
+	<string>Only to reach the AI server you set up on your local network. Snart doesn't look for or connect to other devices.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>While you hold the talk key, Cognivex Interpreter uses the microphone to translate what you say into the other side's language. When it listens to a meeting in the room, the microphone hears the people there.</string>
+	<string>While you hold the talk key, Snart uses the microphone to translate what you say into the other side's language. When it listens to a meeting in the room, the microphone hears the people there.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Cognivex Interpreter uses speech recognition to turn audio into text.</string>
+	<string>Snart uses speech recognition to turn audio into text.</string>
 </dict>
 </plist>

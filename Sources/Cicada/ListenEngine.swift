@@ -117,9 +117,13 @@ final class ListenEngine {
     /// The service that can hear audio (Ling's Ming, or a custom service's speech model); nil when
     /// there is none.
     var cloudService: String? {
+        // Tamil is ElevenLabs' to hear, whichever AI service does the text.
+        if activeLang?.cloud == true || fixedCloud { return ElevenLabs.configured ? "ElevenLabs" : nil }
         guard let ling = translator?.ling, ling.hearsAudio || ling.transcribes else { return nil }
         return ling.config().provider.name
     }
+    private var fixedCloud: Bool { if case .fixed(let l) = sourceMode { return l.cloud } else { return false } }
+
     /// 先用○○听 is offered: a model listening needs has been downloading a while, or couldn't be had.
     var offersCloud: Bool {
         guard isRunning, !cloudListening, cloudService != nil else { return false }
@@ -677,7 +681,7 @@ final class ListenEngine {
     private func switchTranscriber(to lang: Lang, replaySeconds: Double = 0) async {
         // No models to switch between: the service hears every language, and a language picked in
         // settings only becomes its hint (`cloudHint`).
-        if Recognition.cloudOnly || serverHears {
+        if Recognition.cloudOnly || serverHears || lang.cloud {
             guard isRunning else { return }
             if case .fixed = sourceMode { activeLang = lang } else if activeLang == nil { activeLang = lang }
             if !cloudListening { startCloud() }
@@ -1227,7 +1231,7 @@ final class ListenEngine {
                         if self.cloud?.replaced.lang == nil { self.cloud?.replaced = (self.activeLang, false) }
                         self.stopCloud()
                         self.setStatus(L("\(self.cloudService ?? "AI") 连不上 · 字幕改用本机识别"))
-                    } else if !Recognition.cloudOnly { self.stopCloud() }
+                    } else if !Recognition.cloudOnly, self.activeLang?.cloud != true { self.stopCloud() }
                     // Nothing to go back to on an Intel Mac: say why it's quiet, and keep trying.
                     else { self.setStatus(CloudHearing.trouble(error, service: self.cloudService ?? "AI")) }
                 }

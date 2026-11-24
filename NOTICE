@@ -1,9 +1,9 @@
-Cognivex Interpreter
+Snart
 Copyright 2026 CognivexAI
 
 This product is a modified version of Cicada (知了), https://github.com/wquguru/cicada,
 licensed under the Apache License, Version 2.0 (see LICENSE). Changes by CognivexAI include
-the name and icon, a simplified English/French interpreting setup, an ElevenLabs voice option,
+the name and icon, a simplified interpreting setup for English, French, Italian, German and Tamil, an ElevenLabs voice option,
 and the removal of update checks and meeting sharing that used the original project's servers.
 
 The speaker identification model is WeSpeaker ResNet34-LM (VoxCeleb), CC BY 4.0.
