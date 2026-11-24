@@ -80,7 +80,7 @@ struct VoiceSettings: View {
             }
             HStack(spacing: 10) {
                 Text("Voice ID").font(.system(size: 12)).foregroundStyle(Palette.secondary).frame(width: 64, alignment: .leading)
-                TextField("IjgHBy2HxC6Is60nxCjO", text: $voice)
+                TextField("Voice ID of your clone", text: $voice)
             }
             HStack {
                 if saved && !changed { Text("已保存").font(.system(size: 12)).foregroundStyle(Palette.secondary) }
