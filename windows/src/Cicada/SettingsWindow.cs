@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
@@ -66,10 +68,12 @@ sealed partial class SettingsWindow : Window
         sections.Clear();
         var page = new StackPanel { Width = PageWidth(), HorizontalAlignment = HorizontalAlignment.Left };
         Section(page, "ai", L("AI 服务"), AICards().ToArray());
+        // Snart's pair: what you speak and read, what they speak and hear.
+        var pair = Languages.Sources.Select(l => (l.Code, l.Name)).ToList();
         Section(page, "lang", L("语言"), Group(
-            Card(Icons.Globe, L("翻译成"), null, Ui.Choice(Ui.TargetOptions(), app.Settings.Target, app.SetTarget)),
-            Card(null, L("纪要语言"), null, Ui.Choice([("system", L("和字幕一样")), .. Languages.Targets.Select(t => (t.Code, t.Name))], app.Settings.NotesLanguage, v => { app.Settings.NotesLanguage = v; Save(); })),
-            Card(null, L("界面语言"), L("重新打开知了后生效"), Ui.Choice([("system", L("跟随系统")), ("zh-Hans", "简体中文"), ("en", "English"), ("ja", "日本語"), ("ko", "한국어")], app.Settings.UiLanguage, v => { app.Settings.UiLanguage = v; Save(); }))));
+            Card(Icons.Globe, "I speak", "You read this, and speak it", Ui.Choice(pair, app.Settings.Mine, v => app.SetLanguages(v, app.Settings.Theirs))),
+            Card(null, "They speak", "They hear you in this, in your voice", Ui.Choice(pair, app.Settings.Theirs, v => app.SetLanguages(app.Settings.Mine, v))),
+            Card(null, L("纪要语言"), null, Ui.Choice([("system", L("和字幕一样")), .. pair], app.Settings.NotesLanguage, v => { app.Settings.NotesLanguage = v; Save(); }))));
         if (current == "words") Section(page, "words", L("词表"), WordCards());
         var size = new Slider { Minimum = 18, Maximum = 32, Value = app.Settings.SubtitleSize, Width = 200, IsSnapToTickEnabled = true, TickFrequency = 1, VerticalAlignment = VerticalAlignment.Center };
         System.Windows.Automation.AutomationProperties.SetName(size, L("字幕文字大小"));
@@ -90,7 +94,10 @@ sealed partial class SettingsWindow : Window
         // 卸载 as in Settings › Apps, with the same confirmation; only an installed copy offers it.
         FrameworkElement[] about =
         [
-            Card(null, LF("知了 %@", Controller.Version), UpdateDetail(), UpdateControl(), AppIcon.Small(24)),
+            // Snart: no update checks; the project it is built on, one click away (Apache-2.0).
+            Card(null, $"Snart {Controller.Version}", "by CognivexAI",
+                Ui.LinkText("Built on Cicada (open source)", () => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://github.com/wquguru/cicada") { UseShellExecute = true })),
+                AppIcon.Small(24)),
             Card(null, L("日志"), null, Ui.LinkText(L("打开日志"), () => OpenFolder(Path.GetDirectoryName(Paths.Log)!))),
             .. (!Paths.Dev && File.Exists(Install.Exe) ? new[] { Card(null, L("卸载知了"), L("会议记录默认留着"), Ui.LinkText(L("卸载…"), () => Install.Launch("--uninstall"))) } : []),
         ];
@@ -259,6 +266,30 @@ sealed partial class SettingsWindow : Window
         return Group(cards.ToArray());
     }
 
+    /// Snart: the user's ElevenLabs clone speaks every translation, and Scribe hears the meeting.
+    FrameworkElement ElevenLabsCard()
+    {
+        var eleven = app.Eleven;
+        var keyField = new PasswordBox();
+        var voiceField = new TextBox { Text = app.Settings.ElevenVoice };
+        var k = Ui.Field(keyField); k.Width = 200; k.Height = 34;
+        var v = Ui.Field(voiceField); v.Width = 200; v.Height = 34;
+        System.Windows.Automation.AutomationProperties.SetName(keyField, "ElevenLabs API key");
+        System.Windows.Automation.AutomationProperties.SetName(voiceField, "Voice ID of your clone");
+        void Save()
+        {
+            app.SaveElevenLabs(keyField.Password, voiceField.Text);
+            Render();
+        }
+        var help = eleven.CanSpeak ? "Saved. They hear you in your own voice; paste a new key to replace it"
+            : eleven.CanHear ? "Add the Voice ID of your clone so they hear your voice"
+            : "Your API key (it hears the meeting) and the Voice ID of your clone";
+        return Card(null, "Your voice · ElevenLabs", help,
+            Ui.Stack(8, Ui.Row(8, Ui.Text("Key", 13, Palette.Secondary, wrap: false), k),
+                        Ui.Row(8, Ui.Text("Voice", 13, Palette.Secondary, wrap: false), v),
+                        Ui.Button(L("保存"), Save, Ui.Kind.Primary, height: 32)));
+    }
+
     IEnumerable<FrameworkElement> SpeakCards()
     {
         var s = app.Settings;
@@ -287,12 +318,7 @@ sealed partial class SettingsWindow : Window
         yield return Label(L("说话"));
         yield return Group(
             Card(null, L("按住说话"), keyHelp, keyControl),
-            Card(null, L("我说的语言"), null, Ui.Choice([("system", LF("跟随系统（%@）", mine)), .. Languages.Sources.Select(x => (x.Code, x.Name))], s.SpeakFrom, v => { s.SpeakFrom = v; Save(); Render(); })),
-            Card(null, L("线上的人听到的语言"), s.SpeakTo == "room" ? LF("现在是 %@", Ui.TargetName(target)) : null,
-                Ui.Choice([("room", L("对方说的语言")), .. Languages.Targets.Select(t => (t.Code, t.Name))], s.SpeakTo, v => { s.SpeakTo = v; Save(); Render(); })),
-            note is null ? Card(null, LF("线上的人听到的声音（%@）", Ui.TargetName(target)), null, voice)
-                : Ui.Stack(0, Card(null, LF("线上的人听到的声音（%@）", Ui.TargetName(target)), null, voice), PreviewNoteBox(note.Value)),
-            OwnVoiceCard(target, chosen == VoiceCatalog.CloneId));
+            ElevenLabsCard());
         yield return Label(L("麦克风"));
         var mic = Card(null, L("译文送进会议"), cable ? L("在会议软件里把麦克风选成 CABLE Output") : L("需要装免费的 VB-Cable；装的时候 Windows 会请你确认"), cableControl);
         if (cable && Endpoints.SpeakerIsCable())

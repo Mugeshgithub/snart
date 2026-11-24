@@ -127,8 +127,8 @@ sealed class Controller
     public Controller(Application application)
     {
         this.application = application;
-        var ui = Settings.UiLanguage == "system" ? null : Settings.UiLanguage;
-        Strings.Load(Bundled.Strings, ui);
+        // Snart is English only.
+        Strings.Load(Bundled.Strings, "en");
         Key = new AIKey(new DpapiProtector(), service: () => Settings.AiProvider);
         Ling = new LingClient(Key, config: Settings.AIConfig) { ProxyHint = () => ProxyProbe.Hint(WinProxy.SystemOn) };
         Ling.Changed += Changed;
@@ -208,7 +208,8 @@ sealed class Controller
         application.Activated += (_, _) => FolderExport.Retry();
         // A dev build isn't what a release replaces: it checks only when pointed at a test feed.
         UpdateChecker.CleanDownloads();
-        if (!Paths.Dev || Environment.GetEnvironmentVariable("CICADA_UPDATE_FEED") is { Length: > 0 }) { checksUpdates = true; Updates.Start(); }
+        // Snart: never asks Cicada's GitHub for updates (a test feed in a dev build still can).
+        if (Paths.Dev && Environment.GetEnvironmentVariable("CICADA_UPDATE_FEED") is { Length: > 0 }) { checksUpdates = true; Updates.Start(); }
         var watch = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         watch.Tick += (_, _) => _ = WatchEnd();
         watch.Start();
@@ -1332,6 +1333,28 @@ sealed class Controller
         Settings.ShowInCapture = on;
         Settings.Save();
         CaptureSettingChanged();
+        Changed();
+    }
+
+    /// Snart's pair. Picking theirs as yours swaps the two, so they never match.
+    public void SetLanguages(string mine, string theirs)
+    {
+        if (mine == theirs)
+        {
+            if (mine != Settings.Mine) theirs = Settings.Mine;   // yours moved onto theirs
+            else mine = Settings.Theirs;                          // theirs moved onto yours
+        }
+        Settings.SetLanguages(mine, theirs);
+        Settings.Save();
+        Changed();
+    }
+
+    /// The ElevenLabs key (sealed, kept when the field is left empty) and the clone's voice id.
+    public void SaveElevenLabs(string key, string voice)
+    {
+        if (key.Trim().Length > 0) Key.Save(key.Trim(), ElevenLabsClient.Service);
+        Settings.ElevenVoice = voice.Trim();
+        Settings.Save();
         Changed();
     }
 

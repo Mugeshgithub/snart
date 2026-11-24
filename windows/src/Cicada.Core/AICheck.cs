@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 using System.Net.Sockets;
 using System.Text.Json.Nodes;
 
@@ -337,7 +339,7 @@ public sealed class AICheck
     }
 
     /// The website's proxy help, in the UI language.
-    public static string HelpUrl => "https://cicada.indaloop.app" + (Strings.Language is "en" or "ja" or "ko" ? "/" + Strings.Language : "") + "/start/#proxy";
+    public static string HelpUrl => "https://github.com/Mugeshgithub/snart#troubleshooting";
 
     /// "12 分钟前": when the newest evidence came in, for "%@ 开会时用过".
     public static string Ago(DateTimeOffset at, DateTimeOffset now)

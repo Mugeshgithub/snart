@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -540,10 +542,7 @@ sealed class MainWindow : Window
             tools.Children.Add(copy);
         }
         tools.Children.Add(Spaced(Small(Ui.Button(L("导出…"), () => Export(s), Ui.Kind.Standard, height: 32)), 8));
-        // Not while the meeting is still going, nor with nothing in it.
-        var share = Small(Ui.Button(L("分享…"), () => app.ShareSheet(s), Ui.Kind.Standard, height: 32));
-        share.IsEnabled = !live && (s.Lines.Count > 0 || hasNotes);
-        tools.Children.Add(Spaced(share, 8));
+        // Snart: no 分享… (its links lived on Cicada's server).
         Button? more = null;
         more = Ui.Button("···", () =>
         {

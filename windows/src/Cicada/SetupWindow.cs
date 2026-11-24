@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -35,8 +37,7 @@ sealed class SetupWindow : Window
 #pragma warning restore WPF0001
         app.DispatcherUnhandledException += (_, e) => { Log.Debug($"setup: unhandled {e.Exception.GetType().Name}: {e.Exception.Message}"); e.Handled = true; };
         // An upgrade or uninstall speaks the language the user picked; a first install the system's.
-        var ui = AppSettings.Load().UiLanguage;
-        Strings.Load(Bundled.Strings, ui == "system" ? null : ui);
+        Strings.Load(Bundled.Strings, "en");
         Log.Debug($"setup: {mode} {Controller.Version} from {Environment.ProcessPath}");
         return app.Run(new SetupWindow(mode, Install.InstalledVersion()));
     }
