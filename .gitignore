@@ -36,3 +36,11 @@ server/.dev.vars
 # Signing keys never enter the repo (android/scripts/keystore.sh keeps them in ~/.cicada-android)
 *.jks
 *.keystore
+
+# Keys never enter the repo: Snart keeps them outside it (Mac: Application Support, 0600;
+# Windows: DPAPI-sealed under %APPDATA%). These catch one copied in by mistake.
+ai-key-*
+*.key
+.env
+.env.*
+!.env.example
