@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 import Foundation
 
 /// A build run from a checkout rather than installed from a release, so the two can run side by

@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 import Foundation
 
 /// What the last look at the AI service found, step by step: can this Mac reach it, does it take

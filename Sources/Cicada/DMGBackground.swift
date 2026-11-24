@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 import AppKit
 
 /// `Cicada --render-dmg-background out.png <scale>` draws the installer window's background.

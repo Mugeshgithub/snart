@@ -1,3 +1,4 @@
+// Copyright 2026 CognivexAI. Apache License 2.0.
 import Testing
 @testable import Cicada
 

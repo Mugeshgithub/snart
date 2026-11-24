@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 // Renders the app icon (the CognivexAI rings on a navy squircle)
 // into an .iconset. `CicadaIcon [--dev] <out.iconset>`; --dev adds a "DEV" band.
 import AppKit

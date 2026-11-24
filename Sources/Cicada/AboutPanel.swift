@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 import AppKit
 
 /// "About": the standard About panel (icon, name, version and copyright come from Info.plist)

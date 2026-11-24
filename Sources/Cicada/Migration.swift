@@ -1,3 +1,4 @@
+// Copyright 2026 CognivexAI. Apache License 2.0.
 import Foundation
 
 /// Snart (first Cognivex Interpreter) grew out of a Cicada build installed on the same Mac: on its first launch it

@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 // Pure Foundation: the iOS app shares this file (ios/shared-sources.txt).
 import Foundation
 

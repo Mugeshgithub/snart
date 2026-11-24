@@ -1,3 +1,5 @@
+// Based on Cicada (https://github.com/wquguru/cicada), Apache License 2.0.
+// Modified by CognivexAI, 2026.
 import SwiftUI
 
 /// 设置 › 词表: the switches for 改正听错的词, and the word list itself (`Vocabulary`): each word,
