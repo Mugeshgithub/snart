@@ -8,7 +8,7 @@ enum SettingsSection: String, CaseIterable, Identifiable {
     /// This build keeps settings to the AI service and the voice: English and French are fixed, the
     /// rest stays at what it was set to. The other pages are still there for code that opens them,
     /// sent here instead (`shown(for:)`).
-    static let simple: [SettingsSection] = [.ai, .voice]
+    static let simple: [SettingsSection] = [.ai, .voice, .words, .records]
     static func shown(for s: SettingsSection) -> SettingsSection { simple.contains(s) ? s : s == .speak ? .voice : .ai }
     var title: String {
         switch self {

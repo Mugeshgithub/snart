@@ -2903,6 +2903,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, UNUs
         add("Settings…", ",") { [weak self] in self?.model.openSettings(.ai) }
         add("Setup…") { [weak self] in self?.model.onboardingStep = 1; self?.showOnboarding() }
         add("Past meetings") { [weak self] in self?.showMainWindow() }
+        add("Import a recording…") { [weak self] in self?.model.chooseImportFiles() }
         menu.addItem(.separator())
         add("Quit Snart", "q") { NSApp.terminate(nil) }
         return menu

@@ -74,14 +74,8 @@ struct AppRows: View {
                 Toggle("在 Dock 中显示", isOn: Binding(get: { model.settings.showInDock }, set: { model.settings.showInDock = $0 }))
                     .toggleStyle(.switch).labelsHidden().controlSize(.small).tint(Palette.ink)
             }
-            SettingsRow(title: L("版本 \(Updates.current)"), detail: checkDetail) {
-                if updates.update != nil {
-                    SoftButton(L("安装并重新打开"), dark: true) { updates.install(model: model) }
-                        .disabled(updates.progress != nil)
-                } else {
-                    SoftButton(L("检查更新")) { updates.checkNow() }.disabled(updates.check == .checking)
-                }
-            }
+            // Snart has no release feed yet (`UpdateChecker.start`): the version, nothing to check.
+            SettingsRow(title: L("版本 \(Updates.current)")) { EmptyView() }
             SettingsRow(title: L("首次引导"), divider: false) {
                 SoftButton(L("重新看")) { model.onboardingStep = 1; model.openOnboarding?() }
             }

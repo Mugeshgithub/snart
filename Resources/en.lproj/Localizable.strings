@@ -175,7 +175,7 @@
 "在 %@ 创建 key，复制后粘贴到这里。" = "Create a key on %@, then copy and paste it here.";
 "打开 %@ ↗" = "Open %@ ↗";
 "%@ 现在很忙" = "%@ is busy right now";
-"填入 Ling key 后才能识别语音、出字幕和纪要" = "Subtitles and notes need a Ling key";
+"填入 Ling key 后才能识别语音、出字幕和纪要" = "Subtitles and notes need an AI key";
 "不填 key 时，字幕和翻译仍可正常使用" = "Subtitles and translation work without a key";
 "取消" = "Cancel";
 "改用 %@" = "Switch to %@";
@@ -308,7 +308,7 @@
 
 /* CloudHearing */
 "key 已失效，到设置 › AI 服务里重填" = "The key stopped working. Enter a new one in Settings › AI Service";
-"请先在设置 › AI 服务里填入 Ling key" = "Enter a Ling key in Settings › AI Service first";
+"请先在设置 › AI 服务里填入 Ling key" = "Enter an AI key in Settings › AI Service first";
 "字幕和纪要等 %@ 恢复 · 连上后自动继续" = "Subtitles and notes wait for %@ · they resume once it's back";
 
 /* Diagnostics */
@@ -470,7 +470,7 @@
 "同声传译" = "Interpreting";
 "对方说的语言" = "Language they speak";
 "字幕" = "Subtitles";
-"只看原文时不翻译，也不用 Ling 额度" = "Original: no translation, no Ling quota";
+"只看原文时不翻译，也不用 Ling 额度" = "Original: no translation, no AI cost";
 "翻译成" = "Translate to";
 "只按这种语言识别" = "Recognize only this language";
 "说话后自动听出是哪种语言" = "Detects the spoken language automatically as people speak";
@@ -680,9 +680,9 @@
 "这轮纪要没写好 · 下轮自动补上" = "This round of notes didn't work · the next one catches up";
 "换麦克风" = "Change mic";
 "连不上翻译，新字幕暂时只有原文" = "Can't reach translation; subtitles show the original only";
-"填 Ling key 后不用代理也能翻译，还会整理出纪要。" = "With a Ling key, translation works without a proxy, and you get notes too.";
+"填 Ling key 后不用代理也能翻译，还会整理出纪要。" = "With an AI key, translation works without a proxy, and you get notes too.";
 "填好 %@ 的 key 后用它翻译，还会整理出纪要。" = "Enter a %@ key to translate with it, and you get notes too.";
-"识别语音和生成纪要需要 Ling key" = "A Ling key is required for transcription and notes";
+"识别语音和生成纪要需要 Ling key" = "A AI key is required for transcription and notes";
 "生成纪要需要 API key" = "Notes need an API key";
 "填好 %@ 的 key 后，立即开始识别语音、出双语字幕和实时纪要。" = "Add your %@ key to start transcribing speech and generating bilingual subtitles and live notes.";
 "文字记录仍在保存。填好 %@ 的 key 后，会从头整理出整场纪要。" = "Transcript is still being saved. Enter a %@ key to generate notes from the beginning.";
@@ -769,7 +769,7 @@
 "每场会都存在会议记录里" = "Every meeting is kept in Meetings";
 "就是它" = "This one";
 "字幕条可任意拖动，拖拽右下角可调整大小。" = "Drag the subtitle bar anywhere; drag its corner to resize.";
-"先在上一步接上 Ling key，示例会议才能识别出实时字幕。" = "Connect your Ling key in the previous step first to see live subtitles for the sample meeting.";
+"先在上一步接上 Ling key，示例会议才能识别出实时字幕。" = "Connect your AI key in the previous step first to see live subtitles for the sample meeting.";
 "开会时，这些字幕还能整理成纪要" = "In meetings, these subtitles become notes";
 "下一步接上 Ling 就有" = "Connect Ling in the next step";
 
@@ -802,8 +802,8 @@
 "人名、术语前后一致" = "Names and terms stay consistent";
 "自然人声" = "Natural voices";
 "同传约 2 秒出声" = "Interpreting speaks in ~2 s";
-"Intel 版 Mac 需要接上 Ling 才能识别语音" = "Intel Macs require a Ling key for speech recognition";
-"可以先进入应用，开会前在设置 › AI 服务里填上 Ling key 即可。" = "You can enter the app now and add your Ling key in Settings › AI Service before a meeting.";
+"Intel 版 Mac 需要接上 Ling 才能识别语音" = "Intel Macs require an AI key for speech recognition";
+"可以先进入应用，开会前在设置 › AI 服务里填上 Ling key 即可。" = "You can enter the app now and add your AI key in Settings › AI Service before a meeting.";
 "先不接也行，基础功能照常能用" = "You can skip it; the basics still work";
 "随时可在纪要窗口或设置里接上，开完的会也能补出纪要。" = "Connect any time from the notes window or Settings; past meetings can get notes too.";
 "现在可用" = "Works now";
@@ -959,8 +959,8 @@
 "导入的文件" = "Imported files";
 "保存会议录音" = "Save meeting audio";
 "只存在这台 Mac 上" = "Stored only on this Mac";
-"开始听时打开麦克风" = "Open the microphone when listening starts";
-"关掉后只听电脑声音；开会时再手动打开" = "Off: only the Mac's audio; open it by hand when a meeting starts";
+"开始听时打开麦克风" = "In-person mode";
+"关掉后只听电脑声音；开会时再手动打开" = "Also listen to people in the room through the microphone, for face-to-face meetings";
 "说话人识别" = "Speaker identification";
 "按声音标出说话人 1、2…，只在这台 Mac 上处理" = "Labels lines Speaker 1, 2… by voice, on this Mac only";
 "每句都显示说话人" = "Speaker on every line";
@@ -974,10 +974,10 @@
 "文件里说的" = "Spoken in the file";
 "译成“翻译成”里的语言" = "Translated into your Translate to language";
 "转完后生成纪要" = "Write notes when done";
-"导入转写和生成纪要都需要 Ling key" = "Both file transcription and notes require a Ling key";
-"需要 Ling key；没有也能转出文字记录" = "Needs a Ling key; the transcript works without one";
+"导入转写和生成纪要都需要 Ling key" = "Both file transcription and notes require an AI key";
+"需要 Ling key；没有也能转出文字记录" = "Needs an AI key; the transcript works without one";
 "会议应用挂断后结束" = "End when the meeting app hangs up";
-"Zoom、腾讯会议、飞书、Teams 等" = "Zoom, Tencent Meeting, Lark, Teams and others";
+"Zoom、腾讯会议、飞书、Teams 等" = "Zoom, Teams, Webex and others";
 "没人说话时" = "When no one speaks";
 "按识别出的话算，背景音乐不算" = "Counts recognized words, not background music";
 "多久算没人说话" = "Silent for";
@@ -1117,7 +1117,7 @@
 "听" = "Play";
 "合成首音" = "First audio";
 "到达虚拟麦克风" = "Into the virtual mic";
-"没有 Ling key 时用 Google 翻译，需要能访问 Google。" = "Without a Ling key, translation uses Google, which must be reachable.";
+"没有 Ling key 时用 Google 翻译，需要能访问 Google。" = "Without an AI key, translation uses Google, which must be reachable.";
 "换个声音" = "Choose another voice";
 "播放对方听到的声音" = "Play what they heard";
 "听我的原声" = "Play my original";
@@ -1136,11 +1136,11 @@
 "意思对" = "Meaning";
 "一致 %lld" = "Matches %lld";
 "走样 %lld" = "Drifted %lld";
-"Ling 比对原话" = "Checked by Ling";
+"Ling 比对原话" = "Checked by the AI";
 "请看上面" = "See above";
 "已译回你的语言" = "Translated back into your language";
 "未检查" = "Not checked";
-"需要 Ling key" = "Needs Ling key";
+"需要 Ling key" = "Needs AI key";
 "%lld%% 词对上" = "%lld%% of words match";
 "松开后" = "After release";
 "对方听到第一个字" = "until they hear the first word";
@@ -1181,15 +1181,15 @@
 "按住说话键说的，对方听到的是译文" = "Said with the talk key; they heard the translation";
 "没认出是谁：太短，或和已知的声音都不像" = "Not recognised: too short, or unlike the known voices";
 "关掉说话人识别，记录里的名字一起收起" = "Turn off speaker identification; the names in your records are hidden too";
-"Ling 从对话里认出，点一下可以改" = "Ling found this name in the conversation; click to change";
+"Ling 从对话里认出，点一下可以改" = "The AI found this name in the conversation; click to change";
 "改名字，或和别人合并" = "Rename, or merge with someone else";
 "不准？关掉" = "Wrong? Turn off";
 "说了 %lld 句" = "%lld lines";
 "是谁" = "Who";
 "键盘暂时在这里，会议软件收不到 · 回车保存 · Esc 交还" = "Typing here, not in your meeting app · Return to save · Esc to give it back";
-"Ling 正在从对话里找名字…" = "Ling is looking for names in the conversation…";
-"Ling 从对话里认出" = "Found by Ling in the conversation";
-"Ling 从对话里认出：%@" = "Found by Ling in the conversation: %@";
+"Ling 正在从对话里找名字…" = "Looking for names in the conversation…";
+"Ling 从对话里认出" = "Found by the AI in the conversation";
+"Ling 从对话里认出：%@" = "Found by the AI in the conversation: %@";
 "不是 TA" = "Not them";
 "是 TA" = "Yes, that's them";
 "不是" = "No";
@@ -1353,7 +1353,7 @@
 "正在整理纪要…" = "Writing notes…";
 "纪要会在会议进行中自动生成" = "Notes are written during the meeting";
 "用 %@ 整理出总结、议题、结论和人名，约半分钟。" = "Uses %@ to organize summary, topics, conclusions, and names in ~30s.";
-"前往 设置 › AI 服务 填入 Ling 的 API key 后即可生成。" = "Add a Ling API key in Settings › AI Service to generate them.";
+"前往 设置 › AI 服务 填入 Ling 的 API key 后即可生成。" = "Add an AI key in Settings › AI Service to generate them.";
 "正在生成…" = "Generating…";
 "生成纪要" = "Generate Notes";
 "去填 key" = "Add Key";
@@ -1398,7 +1398,7 @@
 "试听" = "Preview";
 "系统声音" = "System voice";
 "你的音色" = "Your voice";
-"填入 Ling key：声音更自然，还能用你自己的声音" = "Add a Ling key for more natural voices, including your own";
+"填入 Ling key：声音更自然，还能用你自己的声音" = "Add an AI key for more natural voices, including your own";
 "填好 AI 服务的 key，声音更自然" = "Add an AI Service key for a more natural voice";
 "去填写" = "Add key";
 "每种语言各记一个声音" = "Each language remembers its voice";
@@ -1406,8 +1406,8 @@
 "（当前）" = " (now)";
 "%@ 用不了时，自动换本机声音" = "Falls back to on-device voice if %@ is unavailable";
 "这个服务不出声音，用本机声音" = "This service has no voice; using on-device voice";
-"Ling 不可用时自动换成本机声音" = "Falls back to the Mac's voice when Ling is unavailable";
-"填入 Ling key 后可用 Ming 声音和你自己的声音" = "With a Ling key you can use Ming voices and your own voice";
+"Ling 不可用时自动换成本机声音" = "Falls back to the Mac's voice when the service is unavailable";
+"填入 Ling key 后可用 Ming 声音和你自己的声音" = "With an AI key you can use Ming voices and your own voice";
 "慢约 1 秒" = "~1 s slower";
 "最快" = "Fastest";
 "去换成 Ling" = "Switch to Ling";
@@ -1435,7 +1435,7 @@
 "再录一次" = "Record Again";
 "正在听写…" = "Transcribing…";
 "%lld–%lld 秒" = "%lld–%lld s";
-"需先在“AI 服务”中填入 Ling key，才能使用你自己的声音。" = "Add a Ling key under “AI Service” to use your own voice.";
+"需先在“AI 服务”中填入 Ling key，才能使用你自己的声音。" = "Add an AI key under “AI Service” to use your own voice.";
 "听起来不像或有杂音？换个安静的地方重录一次。录音仅保存在本机，可随时删除。" = "Doesn't sound like you, or noisy? Record again somewhere quiet. The recording stays on this Mac and can be deleted anytime.";
 "录好了，先听听像不像" = "Recorded. Listen to check it sounds like you";
 "%lld 秒 · 识别出的文字会与录音一起用于学习你的音色" = "%lld s · the recognized text is used with the recording to learn your voice";

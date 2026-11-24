@@ -27,6 +27,10 @@ struct VoiceSettings: View {
                     PillMenu(value: Self.name(model.theirCode), options: Self.languages) { model.setLanguages(mine: model.myCode, theirs: $0) }
                 }
                 SettingsRow(title: "Hold to talk") { ShortcutField(model: model, role: .talk) }
+                SettingsRow(title: "Try a sentence", detail: "Say one line and hear what they will hear, before a call") {
+                    SoftButton("Try") { model.speakTestShown = true }
+                        .disabled(model.virtualMic == nil)
+                }
                 SettingsRow(title: "Hands-free", detail: "No key: it speaks for you after a short pause. Best with headphones.",
                             divider: false) {
                     Toggle("Hands-free", isOn: $settings.speakHandsFree)
@@ -36,6 +40,12 @@ struct VoiceSettings: View {
             Text("ElevenLabs").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.secondary)
                 .padding(.top, 4)
             SettingsCard { eleven }
+        }
+        .sheet(isPresented: $model.speakTestShown) {
+            SpeakTestView(model: model, tester: model.speakTester) {
+                if model.speakTester.busy { model.speakTester.cancel() }
+                model.speakTestShown = false
+            }
         }
     }
 
